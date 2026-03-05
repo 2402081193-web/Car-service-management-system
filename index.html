@@ -3,596 +3,738 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的汽车服务 - 客户中心</title>
+    <title>汽车服务管理系统 - 登录注册</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-        }
-
-        /* 客户导航栏 */
-        .customer-nav {
-            background: white;
-            padding: 15px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .logo {
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: white;
+            min-height: 600px;
+        }
+
+        /* 左侧品牌区域 */
+        .brand-side {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-side::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-icon {
+            font-size: 4rem;
+            margin-bottom: 30px;
+        }
+
+        .brand-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .brand-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #3b82f6;
         }
 
-        .logo i {
-            font-size: 2rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-name {
-            font-weight: 500;
-        }
-
-        .logout-btn {
-            padding: 8px 15px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-        }
-
-        .main-container {
-            display: flex;
-            max-width: 1400px;
-            margin: 30px auto;
-            gap: 25px;
-            padding: 0 20px;
-        }
-
-        /* 左侧个人信息卡片 */
-        .profile-sidebar {
-            width: 300px;
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            height: fit-content;
-        }
-
-        .profile-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            background: #3b82f6;
+        .feature-list li i {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 15px;
-            color: white;
-            font-size: 3rem;
+            font-size: 0.9rem;
         }
 
-        .profile-name {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .profile-email {
-            color: #64748b;
-            margin-bottom: 15px;
-        }
-
-        .profile-stats {
+        /* 右侧表单区域 */
+        .form-side {
+            flex: 1;
+            padding: 60px 50px;
+            background: white;
             display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 20px;
+            flex-direction: column;
         }
 
-        .stat-item {
+        .form-header {
+            margin-bottom: 40px;
             text-align: center;
         }
 
-        .stat-value {
-            font-size: 1.3rem;
+        .form-header h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .form-header p a {
+            color: #667eea;
+            text-decoration: none;
             font-weight: 600;
-            color: #1e293b;
         }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: #64748b;
+        .form-header p a:hover {
+            text-decoration: underline;
         }
 
-        .profile-menu {
-            list-style: none;
+        /* 角色选择器 */
+        .role-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
         }
 
-        .profile-menu li {
-            padding: 12px 15px;
-            margin: 5px 0;
-            border-radius: 8px;
+        .role-option {
+            flex: 1;
+            max-width: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #475569;
         }
 
-        .profile-menu li:hover {
-            background: #f1f5f9;
+        .role-option:hover {
+            border-color: #667eea;
         }
 
-        .profile-menu li.active {
-            background: #dbeafe;
-            color: #3b82f6;
-            font-weight: 500;
+        .role-option.active {
+            border-color: #667eea;
+            background: #f0f3ff;
         }
 
-        .profile-menu li i {
-            width: 20px;
+        .role-option i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 8px;
         }
 
-        /* 右侧内容区域 */
-        .content-area {
-            flex: 1;
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .section-title {
-            font-size: 1.5rem;
+        .role-option span {
+            display: block;
             font-weight: 600;
-            margin-bottom: 25px;
-            color: #1e293b;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: #333;
         }
 
-        .section-title button {
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
+        .role-option small {
+            font-size: 0.8rem;
+            color: #666;
         }
 
-        .section-title button:hover {
-            background: #2563eb;
-        }
-
-        /* 汽车卡片 */
-        .cars-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .car-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .car-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .car-plate {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #3b82f6;
-        }
-
-        .car-model {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-
-        .car-detail {
-            margin: 10px 0;
-            color: #475569;
-        }
-
-        .car-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .car-actions button {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .btn-book {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .btn-history {
-            background: #e2e8f0;
-            color: #475569;
-        }
-
-        /* 预约卡片 */
-        .appointments-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .appointment-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 20px;
-            border-left: 4px solid #3b82f6;
-        }
-
-        .appointment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .appointment-service {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .appointment-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .status-pending {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .status-completed {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-cancelled {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .appointment-details {
-            display: flex;
-            gap: 20px;
-            color: #64748b;
-            font-size: 0.95rem;
-            margin-bottom: 10px;
-        }
-
-        .appointment-details i {
-            margin-right: 5px;
-            color: #3b82f6;
-        }
-
-        .appointment-cost {
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        /* 支付记录 */
-        .payment-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .payment-info {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .payment-date {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-
-        .payment-amount {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .payment-method {
-            padding: 4px 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        /* 模态框 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-        }
-
-        .modal-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
+        /* 表单样式 */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 500;
-            color: #475569;
+            color: #333;
+            font-size: 0.9rem;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            color: #999;
+            font-size: 1.1rem;
+        }
+
+        .input-group input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 1rem;
+            transition: all 0.3s;
         }
 
-        .modal-buttons {
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        /* 表单底部 */
+        .form-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        /* 按钮 */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 分割线 */
+        .divider {
+            margin: 30px 0 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* 社交登录 */
+        .social-login {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .social-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .social-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-3px);
+        }
+
+        /* 错误提示 */
+        .error-message {
+            background: #fee;
+            color: #e53e3e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #fcc;
+        }
+
+        .error-message i {
+            font-size: 1.1rem;
+        }
+
+        /* 成功提示 */
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #a5d6a7;
+        }
+
+        /* 切换动画 */
+        .fade-enter {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 验证码输入框 */
+        .verification-code {
             display: flex;
             gap: 10px;
             margin-top: 20px;
         }
 
-        .modal-buttons button {
+        .verification-code input {
             flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
+            text-align: center;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
         }
 
-        .btn-confirm {
-            background: #3b82f6;
+        .send-code {
+            padding: 12px 20px;
+            background: #f0f3ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .send-code:hover {
+            background: #667eea;
             color: white;
         }
 
-        .btn-cancel {
-            background: #e2e8f0;
-            color: #475569;
+        .send-code:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        .hidden {
-            display: none;
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 50px;
-            color: #64748b;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            color: #cbd5e1;
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .brand-side {
+                padding: 30px;
+            }
+            
+            .form-side {
+                padding: 40px 30px;
+            }
+        }
+
+        /* 管理员特殊标记 */
+        .admin-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div class="customer-nav">
-        <div class="logo">
-            <i class="fas fa-car"></i>
-            <span>我的爱车服务</span>
-        </div>
-        <div class="user-info">
-            <span class="user-name" id="userName">王小明</span>
-            <button class="logout-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> 退出
-            </button>
-        </div>
-    </div>
-
-    <!-- 主容器 -->
-    <div class="main-container">
-        <!-- 左侧个人信息 -->
-        <div class="profile-sidebar">
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <i class="fas fa-user"></i>
+    <div class="container">
+        <!-- 左侧品牌展示区 -->
+        <div class="brand-side">
+            <div class="brand-content">
+                <div class="brand-icon">
+                    <i class="fas fa-car"></i>
                 </div>
-                <div class="profile-name" id="profileName">王小明</div>
-                <div class="profile-email" id="profileEmail">wang@example.com</div>
+                <h1 class="brand-title">汽车服务管理系统</h1>
+                <p class="brand-description">
+                    专业的汽车服务管理平台，为车主和商家提供便捷的服务管理体验。
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>车辆信息管理</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>预约服务系统</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>服务记录追踪</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>在线支付管理</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>数据统计分析</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 右侧表单区 -->
+        <div class="form-side" id="formSide">
+            <!-- 登录表单 -->
+            <div id="loginForm" class="fade-enter">
+                <div class="form-header">
+                    <h2>欢迎回来</h2>
+                    <p>还没有账号？ <a href="#" onclick="showRegister()">立即注册</a></p>
+                </div>
+
+                <!-- 角色选择 -->
+                <div class="role-selector">
+                    <div class="role-option active" onclick="selectRole('customer')" id="customerRole">
+                        <i class="fas fa-user"></i>
+                        <span>车主</span>
+                        <small>个人用户</small>
+                    </div>
+                    <div class="role-option" onclick="selectRole('admin')" id="adminRole">
+                        <i class="fas fa-user-tie"></i>
+                        <span>管理员</span>
+                        <small>商家/员工</small>
+                    </div>
+                </div>
+
+                <!-- 错误提示 -->
+                <div id="loginError" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="loginErrorMessage"></span>
+                </div>
+
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>邮箱 / 手机号</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="text" id="loginEmail" placeholder="请输入邮箱或手机号" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword')"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <label class="remember-me">
+                            <input type="checkbox" id="rememberMe"> 记住我
+                        </label>
+                        <a href="#" class="forgot-password" onclick="showForgotPassword()">忘记密码？</a>
+                    </div>
+
+                    <button type="submit" class="btn" id="loginBtn">
+                        <span>登录</span>
+                    </button>
+
+                    <div class="divider">
+                        <span>或使用</span>
+                    </div>
+
+                    <div class="social-login">
+                        <div class="social-btn" onclick="socialLogin('wechat')">
+                            <i class="fab fa-weixin"></i>
+                        </div>
+                        <div class="social-btn" onclick="socialLogin('qq')">
+                            <i class="fab fa-qq"></i>
+                        </div>
+                        <div class="social-btn" onclick="socialLogin('google')">
+                            <i class="fab fa-google"></i>
+                        </div>
+                    </div>
+                </form>
             </div>
 
-            <div class="profile-stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="carCount">2</div>
-                    <div class="stat-label">爱车</div>
+            <!-- 注册表单（初始隐藏） -->
+            <div id="registerForm" style="display: none;" class="fade-enter">
+                <div class="form-header">
+                    <h2>创建账号</h2>
+                    <p>已有账号？ <a href="#" onclick="showLogin()">立即登录</a></p>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="serviceCount">8</div>
-                    <div class="stat-label">服务</div>
+
+                <!-- 注册角色选择 -->
+                <div class="role-selector">
+                    <div class="role-option active" onclick="selectRegisterRole('customer')" id="registerCustomerRole">
+                        <i class="fas fa-user"></i>
+                        <span>车主</span>
+                        <small>个人用户</small>
+                    </div>
+                    <div class="role-option" onclick="selectRegisterRole('admin')" id="registerAdminRole">
+                        <i class="fas fa-user-tie"></i>
+                        <span>管理员</span>
+                        <small>商家/员工</small>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="pendingCount">1</div>
-                    <div class="stat-label">待处理</div>
+
+                <!-- 错误提示 -->
+                <div id="registerError" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="registerErrorMessage"></span>
                 </div>
+
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <div class="input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="registerName" placeholder="请输入用户名" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="registerEmail" placeholder="请输入邮箱" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>手机号</label>
+                        <div class="input-group">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="registerPhone" placeholder="请输入手机号" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="registerPassword" placeholder="请输入密码" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('registerPassword')"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>确认密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="registerConfirmPassword" placeholder="请再次输入密码" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('registerConfirmPassword')"></i>
+                        </div>
+                    </div>
+
+                    <!-- 管理员注册需要邀请码（可选） -->
+                    <div id="adminInviteField" style="display: none;">
+                        <div class="form-group">
+                            <label>管理员邀请码 <span class="admin-badge">管理员专属</span></label>
+                            <div class="input-group">
+                                <i class="fas fa-key"></i>
+                                <input type="text" id="inviteCode" placeholder="请输入邀请码">
+                            </div>
+                            <small style="color: #999;">联系管理员获取邀请码</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="remember-me">
+                            <input type="checkbox" id="agreeTerms" required> 我已阅读并同意
+                            <a href="#" onclick="showTerms()">《用户协议》</a> 和
+                            <a href="#" onclick="showPrivacy()">《隐私政策》</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn" id="registerBtn">
+                        <span>注册</span>
+                    </button>
+                </form>
             </div>
 
-            <ul class="profile-menu">
-                <li class="active" data-section="cars">
-                    <i class="fas fa-car"></i> 我的爱车
-                </li>
-                <li data-section="appointments">
-                    <i class="fas fa-calendar-check"></i> 预约记录
-                </li>
-                <li data-section="services">
-                    <i class="fas fa-tools"></i> 服务历史
-                </li>
-                <li data-section="payments">
-                    <i class="fas fa-credit-card"></i> 支付记录
-                </li>
-                <li data-section="profile">
-                    <i class="fas fa-user-cog"></i> 个人信息
-                </li>
-            </ul>
-        </div>
+            <!-- 忘记密码表单（初始隐藏） -->
+            <div id="forgotPasswordForm" style="display: none;" class="fade-enter">
+                <div class="form-header">
+                    <h2>重置密码</h2>
+                    <p><a href="#" onclick="showLogin()">返回登录</a></p>
+                </div>
 
-        <!-- 右侧内容区域 -->
-        <div class="content-area" id="contentArea">
-            <!-- 内容将通过JavaScript动态加载 -->
-        </div>
-    </div>
+                <div id="resetError" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="resetErrorMessage"></span>
+                </div>
 
-    <!-- 预约模态框 -->
-    <div class="modal" id="bookingModal">
-        <div class="modal-content">
-            <div class="modal-title">预约服务</div>
-            <form id="bookingForm">
-                <div class="form-group">
-                    <label>选择爱车</label>
-                    <select id="bookingCarId" required>
-                        <option value="">请选择车辆</option>
-                    </select>
+                <div id="resetSuccess" class="success-message" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="resetSuccessMessage"></span>
                 </div>
-                <div class="form-group">
-                    <label>服务类型</label>
-                    <select id="bookingServiceType" required>
-                        <option value="保养">常规保养</option>
-                        <option value="维修">维修</option>
-                        <option value="检测">检测</option>
-                        <option value="美容">美容</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>预约日期</label>
-                    <input type="date" id="bookingDate" required>
-                </div>
-                <div class="form-group">
-                    <label>预约时间</label>
-                    <input type="time" id="bookingTime" required>
-                </div>
-                <div class="form-group">
-                    <label>备注</label>
-                    <textarea id="bookingNotes" rows="3"></textarea>
-                </div>
-                <div class="modal-buttons">
-                    <button type="submit" class="btn-confirm">确认预约</button>
-                    <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
-                </div>
-            </form>
+
+                <form onsubmit="handleResetPassword(event)">
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="resetEmail" placeholder="请输入注册邮箱" required>
+                        </div>
+                    </div>
+
+                    <div class="verification-code">
+                        <input type="text" id="verificationCode" placeholder="验证码" maxlength="6">
+                        <button type="button" class="send-code" id="sendCodeBtn" onclick="sendVerificationCode()">获取验证码</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="newPassword" placeholder="请输入新密码" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>确认新密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="confirmNewPassword" placeholder="请再次输入新密码" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">确认重置</button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- 添加汽车模态框 -->
-    <div class="modal" id="addCarModal">
-        <div class="modal-content">
-            <div class="modal-title">添加爱车</div>
-            <form id="addCarForm">
-                <div class="form-group">
-                    <label>车牌号</label>
-                    <input type="text" id="carPlate" placeholder="例如: 京A12345" required>
-                </div>
-                <div class="form-group">
-                    <label>车型</label>
-                    <input type="text" id="carModel" placeholder="例如: 特斯拉Model 3" required>
-                </div>
-                <div class="form-group">
-                    <label>品牌</label>
-                    <input type="text" id="carBrand" placeholder="例如: 特斯拉">
-                </div>
-                <div class="form-group">
-                    <label>颜色</label>
-                    <input type="text" id="carColor" placeholder="例如: 白色">
-                </div>
-                <div class="form-group">
-                    <label>备注</label>
-                    <textarea id="carNotes" rows="2"></textarea>
-                </div>
-                <div class="modal-buttons">
-                    <button type="submit" class="btn-confirm">添加</button>
-                    <button type="button" class="btn-cancel" onclick="closeAddCarModal()">取消</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 引入 Firebase -->
+    <!-- 引入 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -614,494 +756,396 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // 模拟当前登录用户（实际应该从auth获取）
-        const currentUser = {
-            id: 'user001',
-            name: '王小明',
-            email: 'wang@example.com',
-            phone: '13800138000'
-        };
+        // 当前选中的角色
+        let currentLoginRole = 'customer';
+        let currentRegisterRole = 'customer';
 
-        let currentSection = 'cars';
+        // ==================== 界面切换 ====================
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            clearErrors();
+        }
 
-        // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('profileName').textContent = currentUser.name;
-            document.getElementById('profileEmail').textContent = currentUser.email;
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            clearErrors();
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+            clearErrors();
+        }
+
+        // 选择登录角色
+        function selectRole(role) {
+            currentLoginRole = role;
             
-            loadSection('cars');
-            loadUserStats();
-        });
+            // 更新UI
+            document.getElementById('customerRole').classList.toggle('active', role === 'customer');
+            document.getElementById('adminRole').classList.toggle('active', role === 'admin');
+        }
 
-        // 菜单切换
-        document.querySelectorAll('.profile-menu li').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.profile-menu li').forEach(li => li.classList.remove('active'));
-                item.classList.add('active');
-                currentSection = item.dataset.section;
-                loadSection(currentSection);
-            });
-        });
-
-        // 加载不同板块
-        function loadSection(section) {
-            const contentArea = document.getElementById('contentArea');
+        // 选择注册角色
+        function selectRegisterRole(role) {
+            currentRegisterRole = role;
             
-            switch(section) {
-                case 'cars':
-                    loadCarsSection(contentArea);
-                    break;
-                case 'appointments':
-                    loadAppointmentsSection(contentArea);
-                    break;
-                case 'services':
-                    loadServicesSection(contentArea);
-                    break;
-                case 'payments':
-                    loadPaymentsSection(contentArea);
-                    break;
-                case 'profile':
-                    loadProfileSection(contentArea);
-                    break;
+            // 更新UI
+            document.getElementById('registerCustomerRole').classList.toggle('active', role === 'customer');
+            document.getElementById('registerAdminRole').classList.toggle('active', role === 'admin');
+            
+            // 显示/隐藏管理员邀请码字段
+            document.getElementById('adminInviteField').style.display = role === 'admin' ? 'block' : 'none';
+        }
+
+        // 清除错误信息
+        function clearErrors() {
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
+            document.getElementById('resetError').style.display = 'none';
+            document.getElementById('resetSuccess').style.display = 'none';
+        }
+
+        // 显示错误
+        function showError(elementId, message) {
+            const errorDiv = document.getElementById(elementId);
+            const messageSpan = document.getElementById(elementId + 'Message');
+            messageSpan.textContent = message;
+            errorDiv.style.display = 'flex';
+        }
+
+        // 显示成功
+        function showSuccess(elementId, message) {
+            const successDiv = document.getElementById(elementId);
+            const messageSpan = document.getElementById(elementId + 'Message');
+            messageSpan.textContent = message;
+            successDiv.style.display = 'flex';
+        }
+
+        // 密码显示切换
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
             }
         }
 
-        // ==================== 我的爱车 ====================
-        function loadCarsSection(container) {
-            container.innerHTML = `
-                <div class="section-title">
-                    我的爱车
-                    <button onclick="showAddCarModal()">
-                        <i class="fas fa-plus"></i> 添加爱车
-                    </button>
-                </div>
-                <div id="carsContainer" class="cars-grid">
-                    <div class="empty-state">
-                        <i class="fas fa-car"></i>
-                        <p>加载中...</p>
-                    </div>
-                </div>
-            `;
-
-            loadUserCars();
-        }
-
-        async function loadUserCars() {
-            const container = document.getElementById('carsContainer');
+        // ==================== 登录处理 ====================
+        async function handleLogin(event) {
+            event.preventDefault();
             
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const loginBtn = document.getElementById('loginBtn');
+
+            // 显示加载状态
+            loginBtn.innerHTML = '<span class="loading"></span> 登录中...';
+            loginBtn.disabled = true;
+
             try {
-                // 查询该用户的所有汽车
-                // 实际应用中应该用 where('userId', '==', currentUser.id)
-                // 这里用模拟数据
-                const snapshot = await db.collection('cars').limit(5).get();
+                // 使用 Firebase 认证
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // 从 Firestore 获取用户角色信息
+                const userDoc = await db.collection('users').doc(user.uid).get();
                 
-                if (snapshot.empty) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-car"></i>
-                            <p>还没有添加爱车，点击"添加爱车"开始</p>
-                        </div>
-                    `;
-                    return;
+                if (!userDoc.exists) {
+                    throw new Error('用户数据不存在');
                 }
 
-                container.innerHTML = '';
+                const userData = userDoc.data();
                 
-                snapshot.forEach(doc => {
-                    const car = doc.data();
-                    container.innerHTML += `
-                        <div class="car-card">
-                            <div class="car-header">
-                                <span class="car-plate">${car.plate}</span>
-                                <span class="car-model">${car.model || '未知'}</span>
-                            </div>
-                            <div class="car-detail">
-                                <i class="fas fa-user"></i> 车主: ${car.owner || currentUser.name}<br>
-                                ${car.color ? `<i class="fas fa-palette"></i> 颜色: ${car.color}<br>` : ''}
-                                ${car.notes ? `<small>备注: ${car.notes}</small>` : ''}
-                            </div>
-                            <div class="car-actions">
-                                <button class="btn-book" onclick="showBookingModal('${doc.id}', '${car.plate}')">
-                                    <i class="fas fa-calendar-plus"></i> 预约
-                                </button>
-                                <button class="btn-history" onclick="viewCarHistory('${doc.id}')">
-                                    <i class="fas fa-history"></i> 历史
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                // 验证角色是否匹配
+                if (userData.role !== currentLoginRole) {
+                    throw new Error(`此账号不是${currentLoginRole === 'admin' ? '管理员' : '车主'}账号`);
+                }
+
+                // 记住我功能 - 设置持久化
+                if (rememberMe) {
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                } else {
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+                }
+
+                // 登录成功，根据角色跳转到不同页面
+                if (userData.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html'; // 管理员后台
+                } else {
+                    window.location.href = 'customer-dashboard.html'; // 客户中心
+                }
+
+            } catch (error) {
+                console.error('登录失败:', error);
+                
+                let errorMessage = '登录失败，请重试';
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = '用户不存在';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = '密码错误';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = '邮箱格式不正确';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = '账号已被禁用';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                showError('loginError', errorMessage);
+                
+                // 恢复按钮
+                loginBtn.innerHTML = '<span>登录</span>';
+                loginBtn.disabled = false;
+            }
+        }
+
+        // ==================== 注册处理 ====================
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const phone = document.getElementById('registerPhone').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            const inviteCode = document.getElementById('inviteCode')?.value;
+            
+            const registerBtn = document.getElementById('registerBtn');
+
+            // 表单验证
+            if (password !== confirmPassword) {
+                showError('registerError', '两次输入的密码不一致');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('registerError', '密码长度至少6位');
+                return;
+            }
+
+            if (!agreeTerms) {
+                showError('registerError', '请同意用户协议和隐私政策');
+                return;
+            }
+
+            // 管理员注册验证邀请码
+            if (currentRegisterRole === 'admin') {
+                // 这里可以设置一个固定的邀请码，或者从数据库验证
+                if (inviteCode !== 'ADMIN2024') { // 示例邀请码
+                    showError('registerError', '管理员邀请码错误');
+                    return;
+                }
+            }
+
+            // 显示加载状态
+            registerBtn.innerHTML = '<span class="loading"></span> 注册中...';
+            registerBtn.disabled = true;
+
+            try {
+                // 创建用户
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // 更新用户资料
+                await user.updateProfile({
+                    displayName: name
                 });
-            } catch (error) {
-                console.error('加载汽车失败:', error);
-                container.innerHTML = '<div class="empty-state">加载失败，请刷新重试</div>';
-            }
-        }
 
-        // ==================== 预约记录 ====================
-        function loadAppointmentsSection(container) {
-            container.innerHTML = `
-                <div class="section-title">
-                    预约记录
-                </div>
-                <div id="appointmentsContainer" class="appointments-list">
-                    <div class="empty-state">
-                        <i class="fas fa-calendar-check"></i>
-                        <p>加载中...</p>
-                    </div>
-                </div>
-            `;
-
-            loadUserAppointments();
-        }
-
-        async function loadUserAppointments() {
-            const container = document.getElementById('appointmentsContainer');
-            
-            try {
-                const snapshot = await db.collection('appointments')
-                    .orderBy('date', 'desc')
-                    .limit(10)
-                    .get();
-
-                if (snapshot.empty) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-calendar-check"></i>
-                            <p>暂无预约记录</p>
-                            <button class="btn-book" onclick="showBookingModal()">立即预约</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = '';
-                
-                for (const doc of snapshot.docs) {
-                    const apt = doc.data();
-                    
-                    // 获取汽车信息
-                    const carDoc = await db.collection('cars').doc(apt.carId).get();
-                    const car = carDoc.exists ? carDoc.data() : { plate: '未知' };
-                    
-                    container.innerHTML += `
-                        <div class="appointment-card">
-                            <div class="appointment-header">
-                                <span class="appointment-service">${apt.serviceType} - ${car.plate}</span>
-                                <span class="appointment-status status-${apt.status}">${getStatusText(apt.status)}</span>
-                            </div>
-                            <div class="appointment-details">
-                                <span><i class="fas fa-calendar"></i> ${apt.date}</span>
-                                <span><i class="fas fa-clock"></i> ${apt.time}</span>
-                            </div>
-                            ${apt.notes ? `<div style="color: #64748b; font-size: 0.9rem;">备注: ${apt.notes}</div>` : ''}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('加载预约失败:', error);
-                container.innerHTML = '<div class="empty-state">加载失败</div>';
-            }
-        }
-
-        // ==================== 服务历史 ====================
-        function loadServicesSection(container) {
-            container.innerHTML = `
-                <div class="section-title">
-                    服务历史
-                </div>
-                <div id="servicesContainer" class="appointments-list">
-                    <div class="empty-state">
-                        <i class="fas fa-tools"></i>
-                        <p>加载中...</p>
-                    </div>
-                </div>
-            `;
-
-            loadUserServices();
-        }
-
-        async function loadUserServices() {
-            const container = document.getElementById('servicesContainer');
-            
-            try {
-                const snapshot = await db.collection('services')
-                    .orderBy('date', 'desc')
-                    .limit(20)
-                    .get();
-
-                if (snapshot.empty) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-tools"></i>
-                            <p>暂无服务记录</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = '';
-                
-                for (const doc of snapshot.docs) {
-                    const service = doc.data();
-                    
-                    const carDoc = await db.collection('cars').doc(service.carId).get();
-                    const car = carDoc.exists ? carDoc.data() : { plate: '未知' };
-                    
-                    container.innerHTML += `
-                        <div class="appointment-card">
-                            <div class="appointment-header">
-                                <span class="appointment-service">${service.serviceType} - ${car.plate}</span>
-                                <span class="appointment-status status-${service.status}">${getStatusText(service.status)}</span>
-                            </div>
-                            <div class="appointment-details">
-                                <span><i class="fas fa-calendar"></i> ${service.date}</span>
-                                <span class="appointment-cost">¥${service.cost.toFixed(2)}</span>
-                            </div>
-                            <div style="margin-top: 10px; color: #475569;">${service.description || ''}</div>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('加载服务失败:', error);
-                container.innerHTML = '<div class="empty-state">加载失败</div>';
-            }
-        }
-
-        // ==================== 支付记录 ====================
-        function loadPaymentsSection(container) {
-            container.innerHTML = `
-                <div class="section-title">
-                    支付记录
-                </div>
-                <div id="paymentsContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-credit-card"></i>
-                        <p>加载中...</p>
-                    </div>
-                </div>
-            `;
-
-            loadUserPayments();
-        }
-
-        async function loadUserPayments() {
-            const container = document.getElementById('paymentsContainer');
-            
-            try {
-                const snapshot = await db.collection('payments')
-                    .orderBy('date', 'desc')
-                    .limit(20)
-                    .get();
-
-                if (snapshot.empty) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-credit-card"></i>
-                            <p>暂无支付记录</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = '';
-                
-                for (const doc of snapshot.docs) {
-                    const payment = doc.data();
-                    
-                    const carDoc = await db.collection('cars').doc(payment.carId).get();
-                    const plate = carDoc.exists ? carDoc.data().plate : '未知';
-                    
-                    container.innerHTML += `
-                        <div class="payment-item">
-                            <div class="payment-info">
-                                <span class="payment-date">${payment.date}</span>
-                                <span class="payment-amount">¥${payment.amount.toFixed(2)}</span>
-                                <span class="payment-method">${getPaymentMethod(payment.method)}</span>
-                                <span style="color: #64748b;">${plate}</span>
-                            </div>
-                            <span class="appointment-status status-${payment.status}">${getStatusText(payment.status)}</span>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('加载支付失败:', error);
-                container.innerHTML = '<div class="empty-state">加载失败</div>';
-            }
-        }
-
-        // ==================== 个人信息 ====================
-        function loadProfileSection(container) {
-            container.innerHTML = `
-                <div class="section-title">
-                    个人信息
-                </div>
-                <div style="max-width: 500px;">
-                    <div class="form-group">
-                        <label>姓名</label>
-                        <input type="text" id="profileNameInput" value="${currentUser.name}">
-                    </div>
-                    <div class="form-group">
-                        <label>邮箱</label>
-                        <input type="email" id="profileEmailInput" value="${currentUser.email}">
-                    </div>
-                    <div class="form-group">
-                        <label>电话</label>
-                        <input type="tel" id="profilePhoneInput" value="${currentUser.phone}">
-                    </div>
-                    <button class="btn-book" onclick="updateProfile()">保存修改</button>
-                </div>
-            `;
-        }
-
-        // ==================== 工具函数 ====================
-        function getStatusText(status) {
-            const map = {
-                'pending': '待处理',
-                'completed': '已完成',
-                'cancelled': '已取消'
-            };
-            return map[status] || status;
-        }
-
-        function getPaymentMethod(method) {
-            const map = {
-                'cash': '现金',
-                'card': '银行卡',
-                'wechat': '微信',
-                'alipay': '支付宝'
-            };
-            return map[method] || method;
-        }
-
-        async function loadUserStats() {
-            try {
-                const cars = await db.collection('cars').get();
-                const services = await db.collection('services').get();
-                const pending = await db.collection('appointments').where('status', '==', 'pending').get();
-                
-                document.getElementById('carCount').textContent = cars.size;
-                document.getElementById('serviceCount').textContent = services.size;
-                document.getElementById('pendingCount').textContent = pending.size;
-            } catch (error) {
-                console.error('加载统计失败:', error);
-            }
-        }
-
-        // ==================== 模态框操作 ====================
-        function showBookingModal(carId = '', carPlate = '') {
-            const modal = document.getElementById('bookingModal');
-            const select = document.getElementById('bookingCarId');
-            
-            // 加载汽车选项
-            loadCarOptions(select, carId);
-            
-            // 设置默认日期
-            document.getElementById('bookingDate').valueAsDate = new Date();
-            
-            modal.classList.add('active');
-        }
-
-        async function loadCarOptions(select, selectedId = '') {
-            select.innerHTML = '<option value="">加载中...</option>';
-            
-            try {
-                const snapshot = await db.collection('cars').limit(10).get();
-                select.innerHTML = '<option value="">请选择车辆</option>';
-                
-                snapshot.forEach(doc => {
-                    const car = doc.data();
-                    const selected = doc.id === selectedId ? 'selected' : '';
-                    select.innerHTML += `<option value="${doc.id}" ${selected}>${car.plate} - ${car.model}</option>`;
+                // 在 Firestore 中保存用户信息
+                await db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    role: currentRegisterRole,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'active',
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                 });
+
+                // 如果是管理员，可能还需要创建商家信息
+                if (currentRegisterRole === 'admin') {
+                    await db.collection('shops').doc(user.uid).set({
+                        ownerId: user.uid,
+                        shopName: name + '的店铺',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        status: 'pending' // 需要审核
+                    });
+                }
+
+                // 注册成功，自动登录并跳转
+                if (currentRegisterRole === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'customer-dashboard.html';
+                }
+
             } catch (error) {
-                console.error('加载汽车失败:', error);
-                select.innerHTML = '<option value="">加载失败</option>';
+                console.error('注册失败:', error);
+                
+                let errorMessage = '注册失败，请重试';
+                switch(error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = '邮箱已被注册';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = '邮箱格式不正确';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = '密码强度太弱';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                showError('registerError', errorMessage);
+                
+                // 恢复按钮
+                registerBtn.innerHTML = '<span>注册</span>';
+                registerBtn.disabled = false;
             }
         }
 
-        function closeModal() {
-            document.getElementById('bookingModal').classList.remove('active');
-        }
+        // ==================== 重置密码 ====================
+        let countdown = 60;
+        let timer = null;
 
-        function showAddCarModal() {
-            document.getElementById('addCarModal').classList.add('active');
-        }
-
-        function closeAddCarModal() {
-            document.getElementById('addCarModal').classList.remove('active');
-        }
-
-        function viewCarHistory(carId) {
-            alert('查看车辆历史服务记录');
-        }
-
-        function logout() {
-            if (confirm('确定要退出登录吗？')) {
-                window.location.reload();
-            }
-        }
-
-        // 表单提交
-        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        function sendVerificationCode() {
+            const email = document.getElementById('resetEmail').value;
+            const sendBtn = document.getElementById('sendCodeBtn');
             
-            const appointmentData = {
-                carId: document.getElementById('bookingCarId').value,
-                serviceType: document.getElementById('bookingServiceType').value,
-                date: document.getElementById('bookingDate').value,
-                time: document.getElementById('bookingTime').value,
-                notes: document.getElementById('bookingNotes').value,
-                status: 'pending',
-                userId: currentUser.id,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            if (!email) {
+                showError('resetError', '请输入邮箱');
+                return;
+            }
+
+            // 模拟发送验证码（实际应该调用 Firebase 的密码重置功能）
+            sendBtn.disabled = true;
+            sendBtn.textContent = `60秒后重发`;
+            
+            timer = setInterval(() => {
+                countdown--;
+                sendBtn.textContent = `${countdown}秒后重发`;
+                
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = '获取验证码';
+                    countdown = 60;
+                }
+            }, 1000);
+
+            // 模拟发送成功提示
+            showSuccess('resetSuccess', '验证码已发送到您的邮箱');
+        }
+
+        async function handleResetPassword(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            const code = document.getElementById('verificationCode').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showError('resetError', '两次输入的密码不一致');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showError('resetError', '密码长度至少6位');
+                return;
+            }
 
             try {
-                await db.collection('appointments').add(appointmentData);
-                alert('预约成功！我们会尽快确认。');
-                closeModal();
-                if (currentSection === 'appointments') {
-                    loadAppointmentsSection(document.getElementById('contentArea'));
-                }
+                // 使用 Firebase 的密码重置功能
+                await auth.sendPasswordResetEmail(email);
+                
+                showSuccess('resetSuccess', '密码重置邮件已发送，请检查您的邮箱');
+                
+                // 3秒后返回登录页
+                setTimeout(() => {
+                    showLogin();
+                }, 3000);
+
             } catch (error) {
-                console.error('预约失败:', error);
-                alert('预约失败，请重试');
-            }
-        });
-
-        document.getElementById('addCarForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const carData = {
-                plate: document.getElementById('carPlate').value,
-                model: document.getElementById('carModel').value,
-                brand: document.getElementById('carBrand').value,
-                color: document.getElementById('carColor').value,
-                notes: document.getElementById('carNotes').value,
-                owner: currentUser.name,
-                userId: currentUser.id,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            try {
-                await db.collection('cars').add(carData);
-                alert('爱车添加成功！');
-                closeAddCarModal();
-                document.getElementById('addCarForm').reset();
-                if (currentSection === 'cars') {
-                    loadCarsSection(document.getElementById('contentArea'));
+                console.error('重置密码失败:', error);
+                
+                let errorMessage = '重置失败，请重试';
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = '用户不存在';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = '邮箱格式不正确';
+                        break;
+                    default:
+                        errorMessage = error.message;
                 }
-                loadUserStats();
-            } catch (error) {
-                console.error('添加失败:', error);
-                alert('添加失败，请重试');
+                
+                showError('resetError', errorMessage);
             }
-        });
-
-        function updateProfile() {
-            alert('个人信息更新成功！');
         }
-    </script>
-</body>
-</html>
+
+        // ==================== 社交登录 ====================
+        function socialLogin(provider) {
+            let authProvider;
+            
+            switch(provider) {
+                case 'google':
+                    authProvider = new firebase.auth.GoogleAuthProvider();
+                    break;
+                case 'wechat':
+                    alert('微信登录功能开发中...');
+                    return;
+                case 'qq':
+                    alert('QQ登录功能开发中...');
+                    return;
+            }
+
+            if (authProvider) {
+                auth.signInWithPopup(authProvider)
+                    .then(async (result) => {
+                        const user = result.user;
+                        
+                        // 检查用户是否已存在
+                        const userDoc = await db.collection('users').doc(user.uid).get();
+                        
+                        if (!userDoc.exists) {
+                            // 新用户，创建资料
+                            await db.collection('users').doc(user.uid).set({
+                                uid: user.uid,
+                                name: user.displayName,
+                                email: user.email,
+                                photo: user.photoURL,
+                                role: 'customer', // 默认角色
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                        
+                        // 获取用户角色并跳转
+                        const updatedUserDoc = await db.collection('users').doc(user.uid).get();
+                        const userData = updatedUserDoc.data();
+                        
+                        if (
