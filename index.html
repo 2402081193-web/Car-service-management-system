@@ -1,18 +1,406 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh">
 <head>
-<title>Car Service System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车服务管理系统 - Firestore</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: auto; }
+        h1 { text-align: center; color: #333; }
+        .row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        input, button { padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        button.delete-btn { background: #dc3545; padding: 5px 10px; font-size: 14px; }
+        button.delete-btn:hover { background: #c82333; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        li:hover { background: #f8f9fa; }
+        li.selected { background: #cfe2ff; border-left: 4px solid #007bff; }
+        .car-info { flex: 1; }
+        .car-plate { font-weight: bold; color: #007bff; }
+        .service-item { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #28a745; }
+        .service-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .service-date { font-weight: bold; color: #28a745; }
+        .service-cost { font-weight: bold; color: #dc3545; }
+        .no-data { text-align: center; color: #6c757d; padding: 20px; }
+        .stats { background: #e9ecef; padding: 10px; border-radius: 4px; margin-top: 10px; }
+        .stats p { margin: 5px 0; }
+        .loading { text-align: center; color: #6c757d; padding: 20px; }
+        .error { color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px; margin: 10px 0; }
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <h1>汽车服务管理系统 (Firestore)</h1>
+        
+        <!-- 错误提示区域 -->
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <div class="row">
+            <!-- 左侧：汽车列表及添加表单 -->
+            <div class="col">
+                <h2>🚗 汽车列表</h2>
+                <form id="carForm">
+                    <input type="text" id="plate" placeholder="车牌号 (例如: 京A12345)" required>
+                    <input type="text" id="owner" placeholder="车主姓名" required>
+                    <input type="text" id="model" placeholder="车型 (例如: 特斯拉Model 3)" required>
+                    <button type="submit">添加汽车</button>
+                </form>
+                
+                <div id="carListContainer">
+                    <div id="carLoading" class="loading">加载汽车列表中...</div>
+                    <ul id="carList"></ul>
+                </div>
+                
+                <div class="stats" id="totalCarsStats">
+                    <p>总汽车数: <span id="totalCars">0</span></p>
+                </div>
+            </div>
 
-<h1>Car Service System</h1>
+            <!-- 右侧：服务记录及添加表单 -->
+            <div class="col">
+                <h2 id="selectedCarTitle">🔧 请先选择一辆汽车</h2>
+                
+                <form id="serviceForm" style="display: none;">
+                    <input type="date" id="serviceDate" required>
+                    <input type="text" id="description" placeholder="服务描述 (例如: 更换机油)" required>
+                    <input type="number" id="cost" placeholder="费用 (元)" step="0.01" min="0" required>
+                    <button type="submit">添加服务记录</button>
+                </form>
+                
+                <div id="serviceListContainer">
+                    <div id="serviceLoading" class="loading" style="display: none;">加载服务记录中...</div>
+                    <div id="serviceList"></div>
+                </div>
+                
+                <div class="stats" id="serviceStats" style="display: none;">
+                    <p>总服务次数: <span id="totalServices">0</span></p>
+                    <p>总消费: ¥<span id="totalCost">0.00</span></p>
+                    <p>平均每次: ¥<span id="avgCost">0.00</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<button onclick="login()">Login</button>
+    <!-- 引入 Firebase SDK (Firestore 版本) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-<script type="module" src="app.js"></script>
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyDMXILwgQbMn4n5wXq-3JYM3wfBsP5hQ",
+            authDomain: "car-service-management-system.firebaseapp.com",
+            databaseURL: "https://car-service-management-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "car-service-management-system",
+            storageBucket: "car-service-management-system.firebasestorage.app",
+            messagingSenderId: "848702151527",
+            appId: "1:848702151527:web:50dda0714d1c7492f76dc2",
+            measurementId: "G-2T7CV9DDQL"
+        };
 
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // 初始化 Firestore
+        const db = firebase.firestore();
+        
+        // 使用时间戳
+        const timestamp = firebase.firestore.FieldValue.serverTimestamp;
+
+        // 当前选中的汽车 ID
+        let selectedCarId = null;
+        let selectedCarData = null;
+
+        // DOM 元素
+        const carForm = document.getElementById('carForm');
+        const carList = document.getElementById('carList');
+        const carLoading = document.getElementById('carLoading');
+        const serviceForm = document.getElementById('serviceForm');
+        const serviceList = document.getElementById('serviceList');
+        const serviceLoading = document.getElementById('serviceLoading');
+        const selectedCarTitle = document.getElementById('selectedCarTitle');
+        const errorMessage = document.getElementById('errorMessage');
+        const totalCarsSpan = document.getElementById('totalCars');
+        const serviceStats = document.getElementById('serviceStats');
+        const totalServicesSpan = document.getElementById('totalServices');
+        const totalCostSpan = document.getElementById('totalCost');
+        const avgCostSpan = document.getElementById('avgCost');
+
+        // 显示错误信息
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // --- 汽车相关操作 ---
+        
+        // 添加汽车
+        carForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const plate = document.getElementById('plate').value.trim();
+            const owner = document.getElementById('owner').value.trim();
+            const model = document.getElementById('model').value.trim();
+
+            if (plate && owner && model) {
+                try {
+                    // 检查车牌号是否已存在
+                    const existingCar = await db.collection('cars')
+                        .where('plate', '==', plate)
+                        .get();
+                    
+                    if (!existingCar.empty) {
+                        showError('该车牌号已存在！');
+                        return;
+                    }
+
+                    // 添加新汽车
+                    await db.collection('cars').add({
+                        plate,
+                        owner,
+                        model,
+                        createdAt: timestamp(),
+                        updatedAt: timestamp()
+                    });
+                    
+                    carForm.reset();
+                } catch (error) {
+                    console.error('添加汽车失败:', error);
+                    showError('添加汽车失败: ' + error.message);
+                }
+            }
+        });
+
+        // 实时监听汽车列表变化
+        db.collection('cars')
+            .orderBy('createdAt', 'desc')
+            .onSnapshot((snapshot) => {
+                // 隐藏加载提示
+                carLoading.style.display = 'none';
+                
+                // 清空列表
+                carList.innerHTML = '';
+                
+                // 更新总数
+                totalCarsSpan.textContent = snapshot.size;
+                
+                // 遍历每个汽车文档
+                snapshot.forEach((doc) => {
+                    const car = doc.data();
+                    const carId = doc.id;
+                    
+                    const li = document.createElement('li');
+                    li.dataset.id = carId;
+                    
+                    // 汽车信息
+                    const carInfo = document.createElement('div');
+                    carInfo.className = 'car-info';
+                    carInfo.innerHTML = `
+                        <span class="car-plate">${car.plate}</span><br>
+                        <small>${car.owner} | ${car.model}</small>
+                    `;
+                    
+                    // 删除按钮
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '删除';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (confirm('确定要删除这辆汽车吗？这将同时删除所有相关服务记录！')) {
+                            try {
+                                // 删除汽车
+                                await db.collection('cars').doc(carId).delete();
+                                
+                                // 删除相关服务记录
+                                const services = await db.collection('services')
+                                    .where('carId', '==', carId)
+                                    .get();
+                                
+                                const batch = db.batch();
+                                services.forEach((serviceDoc) => {
+                                    batch.delete(serviceDoc.ref);
+                                });
+                                await batch.commit();
+                                
+                                // 如果删除的是当前选中的汽车，清空右侧
+                                if (selectedCarId === carId) {
+                                    selectedCarId = null;
+                                    selectedCarData = null;
+                                    updateRightPanel();
+                                }
+                            } catch (error) {
+                                console.error('删除失败:', error);
+                                showError('删除失败: ' + error.message);
+                            }
+                        }
+                    };
+                    
+                    li.appendChild(carInfo);
+                    li.appendChild(deleteBtn);
+                    
+                    // 点击选择汽车
+                    li.addEventListener('click', () => selectCar(carId, car));
+                    
+                    // 高亮当前选中的汽车
+                    if (selectedCarId === carId) {
+                        li.classList.add('selected');
+                    }
+                    
+                    carList.appendChild(li);
+                });
+            }, (error) => {
+                console.error('监听汽车列表失败:', error);
+                carLoading.style.display = 'none';
+                carList.innerHTML = '<li class="error">加载失败，请刷新页面重试</li>';
+            });
+
+        // --- 服务相关操作 ---
+        
+        // 选择汽车
+        function selectCar(carId, car) {
+            selectedCarId = carId;
+            selectedCarData = car;
+            
+            // 更新高亮
+            document.querySelectorAll('#carList li').forEach(li => {
+                li.classList.remove('selected');
+                if (li.dataset.id === carId) {
+                    li.classList.add('selected');
+                }
+            });
+            
+            updateRightPanel();
+        }
+        
+        // 更新右侧面板
+        function updateRightPanel() {
+            if (selectedCarId && selectedCarData) {
+                selectedCarTitle.innerHTML = `🔧 ${selectedCarData.plate} 的服务记录`;
+                serviceForm.style.display = 'flex';
+                loadServicesForCar(selectedCarId);
+            } else {
+                selectedCarTitle.textContent = '🔧 请先选择一辆汽车';
+                serviceForm.style.display = 'none';
+                serviceList.innerHTML = '<div class="no-data">请从左侧选择一辆汽车查看服务记录</div>';
+                serviceStats.style.display = 'none';
+            }
+        }
+
+        // 添加服务记录
+        serviceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedCarId) {
+                showError('请先选择一辆汽车');
+                return;
+            }
+
+            const date = document.getElementById('serviceDate').value;
+            const description = document.getElementById('description').value.trim();
+            const cost = parseFloat(document.getElementById('cost').value);
+
+            if (date && description && !isNaN(cost) && cost >= 0) {
+                try {
+                    await db.collection('services').add({
+                        carId: selectedCarId,
+                        date,
+                        description,
+                        cost,
+                        createdAt: timestamp()
+                    });
+                    
+                    serviceForm.reset();
+                    // 设置默认日期为今天
+                    document.getElementById('serviceDate').valueAsDate = new Date();
+                } catch (error) {
+                    console.error('添加服务失败:', error);
+                    showError('添加服务失败: ' + error.message);
+                }
+            }
+        });
+
+        // 加载某辆汽车的服务记录
+        function loadServicesForCar(carId) {
+            serviceLoading.style.display = 'block';
+            serviceList.innerHTML = '';
+            
+            db.collection('services')
+                .where('carId', '==', carId)
+                .orderBy('date', 'desc')
+                .onSnapshot((snapshot) => {
+                    serviceLoading.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        serviceList.innerHTML = '<div class="no-data">暂无服务记录</div>';
+                        serviceStats.style.display = 'none';
+                        return;
+                    }
+                    
+                    let totalCost = 0;
+                    let serviceCount = 0;
+                    
+                    // 清空并重新显示服务列表
+                    serviceList.innerHTML = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const service = { id: doc.id, ...doc.data() };
+                        totalCost += service.cost || 0;
+                        serviceCount++;
+                        
+                        const serviceDiv = document.createElement('div');
+                        serviceDiv.className = 'service-item';
+                        serviceDiv.innerHTML = `
+                            <div class="service-header">
+                                <span class="service-date">${service.date}</span>
+                                <span class="service-cost">¥${(service.cost || 0).toFixed(2)}</span>
+                            </div>
+                            <div>${service.description}</div>
+                        `;
+                        
+                        // 删除按钮
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = '删除';
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.style.marginTop = '10px';
+                        deleteBtn.onclick = async (e) => {
+                            e.stopPropagation();
+                            if (confirm('确定删除这条服务记录？')) {
+                                try {
+                                    await db.collection('services').doc(service.id).delete();
+                                } catch (error) {
+                                    console.error('删除失败:', error);
+                                    showError('删除失败: ' + error.message);
+                                }
+                            }
+                        };
+                        
+                        serviceDiv.appendChild(deleteBtn);
+                        serviceList.appendChild(serviceDiv);
+                    });
+                    
+                    // 更新统计信息
+                    totalServicesSpan.textContent = serviceCount;
+                    totalCostSpan.textContent = totalCost.toFixed(2);
+                    avgCostSpan.textContent = (totalCost / serviceCount).toFixed(2);
+                    serviceStats.style.display = 'block';
+                    
+                }, (error) => {
+                    console.error('加载服务记录失败:', error);
+                    serviceLoading.style.display = 'none';
+                    serviceList.innerHTML = '<div class="error">加载失败，请刷新页面重试</div>';
+                });
+        }
+
+        // 设置默认日期为今天
+        document.getElementById('serviceDate').valueAsDate = new Date();
+    </script>
 </body>
-
 </html>
