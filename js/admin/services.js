@@ -82,24 +82,40 @@ function loadServicesPage() {
         });
     });
 
-    // 表单提交
+    // 表单提交 - 修复时间戳问题
     document.getElementById('serviceForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // 验证必填字段
+        const carId = document.getElementById('serviceCarId').value;
+        if (!carId) {
+            alert('请选择汽车');
+            return;
+        }
+
+        const cost = parseFloat(document.getElementById('serviceCost').value);
+        if (isNaN(cost) || cost < 0) {
+            alert('请输入有效的费用');
+            return;
+        }
+
+        // 创建数据对象 - 使用普通日期字符串，不用 Firebase 时间戳
         const serviceData = {
-            carId: document.getElementById('serviceCarId').value,
+            carId: carId,
             serviceType: document.getElementById('serviceType').value,
             date: document.getElementById('serviceDate').value,
-            cost: parseFloat(document.getElementById('serviceCost').value),
+            cost: cost,
             status: document.getElementById('serviceStatus').value,
             description: document.getElementById('serviceDescription').value,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            // 使用普通 JavaScript 日期，不是 Firebase 时间戳
+            createdAt: new Date().toISOString()
         };
 
         try {
+            // 添加服务记录
             const serviceRef = await db.collection('services').add(serviceData);
             
-            // 如果服务已完成，创建支付记录
+            // 如果服务已完成，自动创建支付记录
             if (serviceData.status === 'completed') {
                 await db.collection('payments').add({
                     carId: serviceData.carId,
@@ -109,17 +125,23 @@ function loadServicesPage() {
                     method: 'cash',
                     status: 'completed',
                     description: serviceData.description,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: new Date().toISOString()
                 });
             }
 
+            // 重置表单
             document.getElementById('serviceForm').reset();
             document.getElementById('serviceDate').valueAsDate = new Date();
-            loadServices('all');
-            showError('服务记录添加成功');
+            
+            // 刷新列表
+            const activeTab = document.querySelector('.tab.active').dataset.status;
+            loadServices(activeTab);
+            
+            alert('服务记录添加成功');
+            
         } catch (error) {
             console.error('添加服务记录失败:', error);
-            showError('添加失败');
+            alert('添加失败: ' + error.message);
         }
     });
 
@@ -133,13 +155,32 @@ async function loadServiceCarOptions() {
     select.innerHTML = '<option value="">加载中...</option>';
 
     try {
-        const snapshot = await db.collection('cars').orderBy('plate').get();
+        // 获取所有汽车，不排序避免索引问题
+        const snapshot = await db.collection('cars').get();
+        
+        if (snapshot.empty) {
+            select.innerHTML = '<option value="">暂无汽车数据</option>';
+            return;
+        }
+        
+        // 在客户端排序
+        const cars = [];
+        snapshot.forEach(doc => {
+            cars.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        // 按车牌号排序
+        cars.sort((a, b) => (a.plate || '').localeCompare(b.plate || ''));
+        
         select.innerHTML = '<option value="">请选择汽车</option>';
         
-        snapshot.forEach(doc => {
-            const car = doc.data();
-            select.innerHTML += `<option value="${doc.id}">${car.plate} - ${car.owner}</option>`;
+        cars.forEach(car => {
+            select.innerHTML += `<option value="${car.id}">${car.plate} - ${car.owner || '未知'}</option>`;
         });
+        
     } catch (error) {
         console.error('加载汽车列表失败:', error);
         select.innerHTML = '<option value="">加载失败</option>';
@@ -152,12 +193,14 @@ async function loadServices(status = 'all') {
     tbody.innerHTML = '<tr><td colspan="6" class="loading">加载中...</td></tr>';
 
     try {
-        let query = db.collection('services').orderBy('date', 'desc');
+        // 获取所有服务记录
+        let query = db.collection('services');
         
+        // 如果有状态筛选
         if (status !== 'all') {
             query = query.where('status', '==', status);
         }
-
+        
         const snapshot = await query.get();
 
         if (snapshot.empty) {
@@ -165,27 +208,51 @@ async function loadServices(status = 'all') {
             return;
         }
 
+        // 在客户端排序
+        const services = [];
+        snapshot.forEach(doc => {
+            services.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        // 按日期倒序排序
+        services.sort((a, b) => {
+            if (a.date && b.date) {
+                return b.date.localeCompare(a.date);
+            }
+            return 0;
+        });
+
         tbody.innerHTML = '';
         
-        for (const doc of snapshot.docs) {
-            const service = doc.data();
-            
+        for (const service of services) {
             // 获取汽车信息
-            const carDoc = await db.collection('cars').doc(service.carId).get();
-            const plate = carDoc.exists ? carDoc.data().plate : '未知';
+            let plate = '未知';
+            try {
+                if (service.carId) {
+                    const carDoc = await db.collection('cars').doc(service.carId).get();
+                    if (carDoc.exists) {
+                        plate = carDoc.data().plate || '未知';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading car:', error);
+            }
             
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${plate}</strong></td>
-                    <td>${service.serviceType}</td>
-                    <td>${service.date}</td>
-                    <td>¥${service.cost.toFixed(2)}</td>
-                    <td><span class="status-badge status-${service.status}">${getStatusText(service.status)}</span></td>
+                    <td>${service.serviceType || '-'}</td>
+                    <td>${service.date || '-'}</td>
+                    <td>¥${(service.cost || 0).toFixed(2)}</td>
+                    <td><span class="badge badge-${service.status || 'pending'}">${getServiceStatusText(service.status)}</span></td>
                     <td class="action-btns">
-                        <button class="action-btn edit" onclick="editService('${doc.id}')">
+                        <button class="action-btn edit" onclick="editService('${service.id}')">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn delete" onclick="deleteService('${doc.id}')">
+                        <button class="action-btn delete" onclick="deleteService('${service.id}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -194,8 +261,18 @@ async function loadServices(status = 'all') {
         }
     } catch (error) {
         console.error('加载服务记录失败:', error);
-        tbody.innerHTML = '<tr><td colspan="6" class="error-message">加载失败</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" class="error-message">加载失败: ${error.message}</td></tr>`;
     }
+}
+
+// 获取服务状态文本
+function getServiceStatusText(status) {
+    const statusMap = {
+        'pending': '待处理',
+        'completed': '已完成',
+        'cancelled': '已取消'
+    };
+    return statusMap[status] || status || '未知';
 }
 
 // 删除服务记录
@@ -204,7 +281,9 @@ window.deleteService = async (serviceId) => {
 
     try {
         // 同时删除关联的支付记录
-        const payments = await db.collection('payments').where('serviceId', '==', serviceId).get();
+        const payments = await db.collection('payments')
+            .where('serviceId', '==', serviceId)
+            .get();
         
         const batch = db.batch();
         payments.forEach(doc => batch.delete(doc.ref));
@@ -214,13 +293,57 @@ window.deleteService = async (serviceId) => {
         
         const activeTab = document.querySelector('.tab.active').dataset.status;
         loadServices(activeTab);
-        showError('删除成功');
+        alert('删除成功');
     } catch (error) {
         console.error('删除失败:', error);
-        showError('删除失败');
+        alert('删除失败: ' + error.message);
     }
 };
 
+// 编辑服务记录
 window.editService = (serviceId) => {
     alert('编辑功能开发中...');
 };
+
+// 添加 badge 样式
+const style = document.createElement('style');
+style.textContent = `
+    .badge-pending {
+        background: #fef9c3;
+        color: #854d0e;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .badge-completed {
+        background: #dcfce7;
+        color: #166534;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .badge-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+    }
+    
+    .error-message {
+        text-align: center;
+        padding: 20px;
+        background: #fee2e2;
+        color: #991b1b;
+        border-radius: 8px;
+    }
+`;
+document.head.appendChild(style);
