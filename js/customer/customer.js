@@ -2,10 +2,74 @@
 let currentUser = null;
 let currentPage = 'my-cars';
 
-// 初始化 - 等待 DOM 加载完成
+// 等待 DOM 加载完成
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, waiting for auth...');
+    
+    // 确保所有必要的元素存在
+    ensureElements();
 });
+
+// 确保必要元素存在的函数
+function ensureElements() {
+    // 检查并创建必要的容器
+    const elements = [
+        'userName',
+        'profileName', 
+        'profileEmail',
+        'welcomeName',
+        'welcomeCard',
+        'customerContent',
+        'bookingModal',
+        'addCarModal'
+    ];
+    
+    elements.forEach(id => {
+        if (!document.getElementById(id)) {
+            console.warn(`Element ${id} not found, creating...`);
+            createElement(id);
+        }
+    });
+}
+
+// 创建缺失的元素
+function createElement(id) {
+    const element = document.createElement('div');
+    element.id = id;
+    
+    switch(id) {
+        case 'welcomeCard':
+            element.className = 'welcome-card';
+            element.innerHTML = `
+                <h2>欢迎回来，<span id="welcomeName">尊贵的车主</span></h2>
+                <p>在这里您可以管理您的爱车、预约服务、查看历史记录等。</p>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="showBookingModal()">
+                        <i class="fas fa-calendar-plus"></i> 快速预约
+                    </button>
+                    <button class="btn btn-outline" onclick="loadMyCars()">
+                        <i class="fas fa-car"></i> 查看爱车
+                    </button>
+                </div>
+            `;
+            document.querySelector('.content-area')?.appendChild(element);
+            break;
+            
+        case 'customerContent':
+            element.id = 'customerContent';
+            element.style.display = 'none';
+            element.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+            document.querySelector('.content-area')?.appendChild(element);
+            break;
+            
+        default:
+            // 其他元素添加到相应位置
+            const target = document.getElementById(id) || document.body;
+            if (!target.parentNode) {
+                document.body.appendChild(element);
+            }
+    }
+}
 
 // 监听认证状态变化
 auth.onAuthStateChanged(async (user) => {
@@ -15,40 +79,36 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = user;
         
         try {
-            // 先等待 DOM 元素存在
-            await waitForElements();
-            
+            // 获取用户信息
             const userDoc = await db.collection('users').doc(user.uid).get();
+            
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                
-                // 安全地设置元素内容
-                safeSetTextContent('userName', userData.name || '用户');
-                safeSetTextContent('profileName', userData.name || '用户');
-                safeSetTextContent('profileEmail', userData.email || '');
-                safeSetTextContent('welcomeName', userData.name || '尊贵的车主');
+                updateUserInfo(userData);
             } else {
-                // 如果用户文档不存在，创建默认
-                await db.collection('users').doc(user.uid).set({
+                // 创建新用户文档
+                const newUser = {
                     uid: user.uid,
                     name: user.displayName || '新用户',
-                    email: user.email,
+                    email: user.email || '',
                     role: 'customer',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                safeSetTextContent('userName', user.displayName || '新用户');
-                safeSetTextContent('profileName', user.displayName || '新用户');
-                safeSetTextContent('profileEmail', user.email || '');
-                safeSetTextContent('welcomeName', user.displayName || '尊贵的车主');
+                    createdAt: new Date().toISOString()
+                };
+                await db.collection('users').doc(user.uid).set(newUser);
+                updateUserInfo(newUser);
             }
             
-            // 显示欢迎卡片，隐藏内容容器
-            safeSetDisplay('welcomeCard', 'block');
-            safeSetDisplay('customerContent', 'none');
+            // 显示欢迎卡片
+            showWelcomeCard();
+            
+            // 默认加载我的爱车
+            setTimeout(() => {
+                loadMyCars();
+            }, 500);
             
         } catch (error) {
             console.error('加载用户信息失败:', error);
+            showErrorMessage('加载用户信息失败: ' + error.message);
         }
     } else {
         // 未登录，跳转到登录页
@@ -56,62 +116,61 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// 安全设置文本内容的辅助函数
-function safeSetTextContent(elementId, text) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = text;
-    } else {
-        console.warn(`Element with id '${elementId}' not found`);
+// 更新用户信息显示
+function updateUserInfo(userData) {
+    const userName = document.getElementById('userName');
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const welcomeName = document.getElementById('welcomeName');
+    
+    if (userName) userName.textContent = userData.name || '用户';
+    if (profileName) profileName.textContent = userData.name || '用户';
+    if (profileEmail) profileEmail.textContent = userData.email || '';
+    if (welcomeName) welcomeName.textContent = userData.name || '尊贵的车主';
+}
+
+// 显示欢迎卡片
+function showWelcomeCard() {
+    const welcomeCard = document.getElementById('welcomeCard');
+    const customerContent = document.getElementById('customerContent');
+    
+    if (welcomeCard) {
+        welcomeCard.style.display = 'block';
+    }
+    
+    if (customerContent) {
+        customerContent.style.display = 'none';
     }
 }
 
-// 安全设置显示状态的辅助函数
-function safeSetDisplay(elementId, displayValue) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.style.display = displayValue;
-    } else {
-        console.warn(`Element with id '${elementId}' not found`);
+// 显示内容区域
+function showContent() {
+    const welcomeCard = document.getElementById('welcomeCard');
+    const customerContent = document.getElementById('customerContent');
+    
+    if (welcomeCard) {
+        welcomeCard.style.display = 'none';
     }
-}
-
-// 等待元素加载的辅助函数
-function waitForElements() {
-    return new Promise((resolve) => {
-        const checkElements = () => {
-            const elements = ['userName', 'profileName', 'profileEmail', 'welcomeName', 'welcomeCard', 'customerContent'];
-            const allExist = elements.every(id => document.getElementById(id));
-            
-            if (allExist) {
-                resolve();
-            } else {
-                setTimeout(checkElements, 100);
-            }
-        };
-        
-        checkElements();
-    });
+    
+    if (customerContent) {
+        customerContent.style.display = 'block';
+    }
 }
 
 // 菜单点击
-document.querySelectorAll('.profile-menu li').forEach(item => {
-    item.addEventListener('click', () => {
+document.addEventListener('click', (e) => {
+    const menuItem = e.target.closest('.profile-menu li');
+    if (menuItem) {
         document.querySelectorAll('.profile-menu li').forEach(li => li.classList.remove('active'));
-        item.classList.add('active');
-        currentPage = item.dataset.page;
+        menuItem.classList.add('active');
+        currentPage = menuItem.dataset.page;
         
-        // 隐藏欢迎卡片，显示内容容器
-        const welcomeCard = document.getElementById('welcomeCard');
-        const customerContent = document.getElementById('customerContent');
-        
-        if (welcomeCard) welcomeCard.style.display = 'none';
-        if (customerContent) customerContent.style.display = 'block';
+        showContent();
         
         if (currentUser) {
             loadCustomerPage(currentPage);
         }
-    });
+    }
 });
 
 // 加载对应页面
@@ -121,25 +180,42 @@ function loadCustomerPage(page) {
         return;
     }
     
+    const customerContent = document.getElementById('customerContent');
+    if (customerContent) {
+        customerContent.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+    }
+    
     switch(page) {
         case 'my-cars':
             if (typeof loadMyCars === 'function') {
                 loadMyCars();
+            } else {
+                console.error('loadMyCars function not found');
+                showErrorMessage('模块加载失败，请刷新页面重试');
             }
             break;
         case 'my-appointments':
             if (typeof loadMyAppointments === 'function') {
                 loadMyAppointments();
+            } else {
+                console.error('loadMyAppointments function not found');
+                showErrorMessage('模块加载失败，请刷新页面重试');
             }
             break;
         case 'my-services':
             if (typeof loadMyServices === 'function') {
                 loadMyServices();
+            } else {
+                console.error('loadMyServices function not found');
+                showErrorMessage('模块加载失败，请刷新页面重试');
             }
             break;
         case 'my-payments':
             if (typeof loadMyPayments === 'function') {
                 loadMyPayments();
+            } else {
+                console.error('loadMyPayments function not found');
+                showErrorMessage('模块加载失败，请刷新页面重试');
             }
             break;
         default:
@@ -150,93 +226,39 @@ function loadCustomerPage(page) {
 }
 
 // 显示错误消息
-function showError(message) {
-    console.error(message);
-    
-    // 检查是否有错误提示容器
-    let errorContainer = document.getElementById('errorContainer');
-    
-    if (!errorContainer) {
-        // 创建错误提示容器
-        errorContainer = document.createElement('div');
-        errorContainer.id = 'errorContainer';
-        errorContainer.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #ef4444;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease;
-            max-width: 350px;
-        `;
-        document.body.appendChild(errorContainer);
-    }
-    
-    errorContainer.innerHTML = `
+function showErrorMessage(message) {
+    const toast = document.createElement('div');
+    toast.className = 'error-toast';
+    toast.innerHTML = `
         <i class="fas fa-exclamation-circle"></i>
         <span>${message}</span>
     `;
-    errorContainer.style.display = 'flex';
+    document.body.appendChild(toast);
     
     setTimeout(() => {
-        if (errorContainer) {
-            errorContainer.style.display = 'none';
-        }
-    }, 5000);
+        toast.remove();
+    }, 3000);
 }
 
 // 显示成功消息
-function showSuccess(message) {
-    // 检查是否有成功提示容器
-    let successContainer = document.getElementById('successContainer');
-    
-    if (!successContainer) {
-        // 创建成功提示容器
-        successContainer = document.createElement('div');
-        successContainer.id = 'successContainer';
-        successContainer.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #22c55e;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease;
-            max-width: 350px;
-        `;
-        document.body.appendChild(successContainer);
-    }
-    
-    successContainer.innerHTML = `
+function showSuccessMessage(message) {
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.innerHTML = `
         <i class="fas fa-check-circle"></i>
         <span>${message}</span>
     `;
-    successContainer.style.display = 'flex';
+    document.body.appendChild(toast);
     
     setTimeout(() => {
-        if (successContainer) {
-            successContainer.style.display = 'none';
-        }
+        toast.remove();
     }, 3000);
 }
 
 // 打开预约模态框
 window.showBookingModal = function(carId) {
     if (!currentUser) {
-        showError('请先登录');
+        showErrorMessage('请先登录');
         return;
     }
     
@@ -251,14 +273,13 @@ window.showBookingModal = function(carId) {
         loadCarOptions(select, carId);
     }
     
-    // 设置默认日期
     const dateInput = document.getElementById('bookingDate');
     if (dateInput) {
-        dateInput.valueAsDate = new Date();
+        const today = new Date();
+        dateInput.value = today.toISOString().split('T')[0];
     }
     
     modal.classList.add('show');
-    modal.style.display = 'flex';
 };
 
 // 关闭预约模态框
@@ -266,21 +287,19 @@ window.closeBookingModal = function() {
     const modal = document.getElementById('bookingModal');
     if (modal) {
         modal.classList.remove('show');
-        modal.style.display = 'none';
     }
 };
 
 // 打开添加车辆模态框
 window.showAddCarModal = function() {
     if (!currentUser) {
-        showError('请先登录');
+        showErrorMessage('请先登录');
         return;
     }
     
     const modal = document.getElementById('addCarModal');
     if (modal) {
         modal.classList.add('show');
-        modal.style.display = 'flex';
     }
 };
 
@@ -289,15 +308,11 @@ window.closeAddCarModal = function() {
     const modal = document.getElementById('addCarModal');
     if (modal) {
         modal.classList.remove('show');
-        modal.style.display = 'none';
     }
 };
 
 // 提交预约
 window.submitBooking = async function() {
-    const form = document.getElementById('bookingForm');
-    if (!form) return;
-    
     const carId = document.getElementById('bookingCarId')?.value;
     const serviceType = document.getElementById('bookingServiceType')?.value;
     const date = document.getElementById('bookingDate')?.value;
@@ -305,7 +320,7 @@ window.submitBooking = async function() {
     const notes = document.getElementById('bookingNotes')?.value;
     
     if (!carId || !serviceType || !date || !time) {
-        showError('请填写完整信息');
+        showErrorMessage('请填写完整信息');
         return;
     }
     
@@ -322,7 +337,7 @@ window.submitBooking = async function() {
 
     try {
         await db.collection('appointments').add(appointmentData);
-        showSuccess('预约成功！');
+        showSuccessMessage('预约成功！');
         closeBookingModal();
         
         if (currentPage === 'my-appointments') {
@@ -330,7 +345,7 @@ window.submitBooking = async function() {
         }
     } catch (error) {
         console.error('预约失败:', error);
-        showError('预约失败: ' + error.message);
+        showErrorMessage('预约失败: ' + error.message);
     }
 };
 
@@ -343,7 +358,7 @@ window.submitAddCar = async function() {
     const notes = document.getElementById('carNotes')?.value;
     
     if (!plate || !model) {
-        showError('请填写车牌号和车型');
+        showErrorMessage('请填写车牌号和车型');
         return;
     }
 
@@ -365,12 +380,12 @@ window.submitAddCar = async function() {
             .get();
         
         if (!existingCar.empty) {
-            showError('该车牌号已存在');
+            showErrorMessage('该车牌号已存在');
             return;
         }
 
         await db.collection('cars').add(carData);
-        showSuccess('爱车添加成功！');
+        showSuccessMessage('爱车添加成功！');
         closeAddCarModal();
         
         if (currentPage === 'my-cars') {
@@ -378,7 +393,7 @@ window.submitAddCar = async function() {
         }
     } catch (error) {
         console.error('添加失败:', error);
-        showError('添加失败: ' + error.message);
+        showErrorMessage('添加失败: ' + error.message);
     }
 };
 
@@ -414,9 +429,33 @@ async function loadCarOptions(select, selectedId) {
     }
 }
 
-// 添加动画样式
+// 添加样式
 const style = document.createElement('style');
 style.textContent = `
+    .error-toast, .success-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .error-toast {
+        background: #ef4444;
+    }
+    
+    .success-toast {
+        background: #22c55e;
+    }
+    
     @keyframes slideIn {
         from {
             transform: translateX(100%);
@@ -427,8 +466,31 @@ style.textContent = `
             opacity: 1;
         }
     }
+    
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #64748b;
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .modal.show {
+        display: flex !important;
+    }
 `;
-if (!document.querySelector('#customer-styles')) {
-    style.id = 'customer-styles';
-    document.head.appendChild(style);
-}
+document.head.appendChild(style);
