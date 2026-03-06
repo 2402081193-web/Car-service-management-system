@@ -77,6 +77,7 @@ document.querySelectorAll('.sidebar-menu li').forEach(item => {
 });
 
 // 页面加载函数
+// 页面加载函数
 function loadPage(page) {
     console.log('Loading page:', page);
     
@@ -138,6 +139,16 @@ function loadPage(page) {
             } else {
                 console.error('loadSettingsPage not defined');
                 showError('系统设置模块加载失败');
+                // 显示一个临时提示
+                const container = document.getElementById('pageContent');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            系统设置模块正在加载中，请稍候...
+                        </div>
+                    `;
+                }
             }
             break;
         default:
