@@ -11,7 +11,7 @@ function loadCarsPage() {
                 </div>
                 <div class="form-group">
                     <label>车主姓名</label>
-                    <input type="text" id="owner" placeholder="车主姓名" required>
+                    <input type="text" id="name" placeholder="车主姓名" required>
                 </div>
                 <div class="form-group">
                     <label>车型</label>
