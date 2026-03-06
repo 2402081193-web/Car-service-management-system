@@ -1,5 +1,6 @@
 // 当前选中的用户ID
 let selectedUserId = null;
+let selectedUserName = '';
 
 // 加载用户管理页面
 function loadUsersPage() {
@@ -86,10 +87,14 @@ async function loadUsers() {
                     <td>
                         <div class="btn-group" style="gap: 5px;">
                             ${userData.role !== 'admin' ? `
-                                <button class="btn btn-sm btn-warning" onclick="showPromoteModal('${userData.id}')">
+                                <button class="btn btn-sm btn-warning" onclick="showPromoteModal('${userData.id}', '${userData.name}')">
                                     <i class="fas fa-arrow-up"></i> 提升
                                 </button>
-                            ` : ''}
+                            ` : `
+                                <button class="btn btn-sm btn-info" onclick="showDemoteModal('${userData.id}', '${userData.name}')">
+                                    <i class="fas fa-arrow-down"></i> 移除管理员
+                                </button>
+                            `}
                             <button class="btn btn-sm btn-danger" onclick="deleteUser('${userData.id}')">
                                 <i class="fas fa-trash"></i> 删除
                             </button>
@@ -130,11 +135,13 @@ function formatDate(dateString) {
 }
 
 // 显示提升管理员模态框
-function showPromoteModal(userId) {
+function showPromoteModal(userId, userName) {
     selectedUserId = userId;
+    selectedUserName = userName;
     const modal = document.getElementById('promoteModal');
     if (modal) {
         document.getElementById('promotePassword').value = '';
+        document.getElementById('promoteModalTitle').textContent = `提升用户 "${userName}" 为管理员`;
         modal.classList.add('show');
     }
 }
@@ -146,6 +153,7 @@ function closePromoteModal() {
         modal.classList.remove('show');
     }
     selectedUserId = null;
+    selectedUserName = '';
 }
 
 // 确认提升为管理员
@@ -185,9 +193,109 @@ async function confirmPromote() {
     }
 }
 
+// 显示移除管理员模态框
+function showDemoteModal(userId, userName) {
+    selectedUserId = userId;
+    selectedUserName = userName;
+    
+    // 创建移除管理员模态框（如果不存在）
+    let modal = document.getElementById('demoteModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'demoteModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3 id="demoteModalTitle">移除管理员</h3>
+                    <span class="close" onclick="closeDemoteModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>确定要将 <strong id="demoteUserName"></strong> 的管理员权限移除吗？</p>
+                    <p class="text-warning">移除后该用户将成为普通车主。</p>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>请输入管理员密码确认操作：</label>
+                        <input type="password" id="demotePassword" class="form-control" placeholder="请输入管理员密码">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="confirmDemote()">确认移除</button>
+                    <button class="btn btn-secondary" onclick="closeDemoteModal()">取消</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    document.getElementById('demoteUserName').textContent = userName;
+    document.getElementById('demotePassword').value = '';
+    modal.classList.add('show');
+}
+
+// 关闭移除管理员模态框
+function closeDemoteModal() {
+    const modal = document.getElementById('demoteModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+    selectedUserId = null;
+    selectedUserName = '';
+}
+
+// 确认移除管理员
+async function confirmDemote() {
+    const password = document.getElementById('demotePassword')?.value;
+    
+    if (!password) {
+        alert('请输入管理员密码');
+        return;
+    }
+    
+    // 检查管理员密码
+    if (password !== ADMIN_REGISTER_PASSWORD) {
+        alert('管理员密码错误');
+        return;
+    }
+    
+    if (!selectedUserId) {
+        alert('请选择用户');
+        return;
+    }
+    
+    // 不能移除自己的管理员权限
+    if (selectedUserId === auth.currentUser?.uid) {
+        alert('不能移除自己的管理员权限');
+        closeDemoteModal();
+        return;
+    }
+    
+    try {
+        await db.collection('users').doc(selectedUserId).update({
+            role: 'customer',
+            demotedAt: new Date().toISOString(),
+            demotedBy: auth.currentUser?.uid
+        });
+        
+        alert('已成功移除管理员权限');
+        closeDemoteModal();
+        loadUsers(); // 刷新列表
+        
+    } catch (error) {
+        console.error('移除失败:', error);
+        alert('移除失败: ' + error.message);
+    }
+}
+
 // 删除用户
 async function deleteUser(userId) {
     if (!confirm('确定要删除这个用户吗？此操作不可恢复！')) return;
+    
+    // 不能删除自己
+    if (userId === auth.currentUser?.uid) {
+        alert('不能删除自己的账号');
+        return;
+    }
     
     try {
         // 获取用户的所有关联数据
@@ -221,4 +329,7 @@ window.loadUsersPage = loadUsersPage;
 window.showPromoteModal = showPromoteModal;
 window.closePromoteModal = closePromoteModal;
 window.confirmPromote = confirmPromote;
+window.showDemoteModal = showDemoteModal;
+window.closeDemoteModal = closeDemoteModal;
+window.confirmDemote = confirmDemote;
 window.deleteUser = deleteUser;
