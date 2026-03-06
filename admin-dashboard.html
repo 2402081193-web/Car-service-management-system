@@ -86,7 +86,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- 引入自定义脚本 -->
+    <!-- 引入自定义脚本（注意顺序） -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin/admin.js"></script>
@@ -96,6 +96,15 @@
     <script src="js/admin/payments.js"></script>
     <script src="js/admin/reports.js"></script>
     <script src="js/admin/users.js"></script>
+    <!-- 新增：系统设置模块 -->
     <script src="js/admin/settings.js"></script>
+
+<!-- 添加一个检查脚本，确认所有模块都已加载 -->
+    <script>
+    console.log('All scripts loaded. Checking modules:');
+    console.log('- loadSettingsPage:', typeof loadSettingsPage);
+    console.log('- loadUsersPage:', typeof loadUsersPage);
+    console.log('- loadCarsPage:', typeof loadCarsPage);
+</script>
 </body>
 </html>
