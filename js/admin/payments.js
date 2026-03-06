@@ -96,7 +96,7 @@ function loadPaymentsPage() {
     // 设置默认日期
     document.getElementById('paymentDate').valueAsDate = new Date();
 
-    // 表单提交
+    // 表单提交 - 修复时间戳问题
     document.getElementById('paymentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -113,22 +113,33 @@ function loadPaymentsPage() {
             return;
         }
 
+        // 创建数据对象，不包含 createdAt 字段
         const paymentData = {
             carId: carId,
             amount: amount,
             date: document.getElementById('paymentDate').value,
             method: document.getElementById('paymentMethod').value,
             status: document.getElementById('paymentStatus').value,
-            notes: document.getElementById('paymentNotes').value || '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            notes: document.getElementById('paymentNotes').value || ''
         };
 
         try {
-            await db.collection('payments').add(paymentData);
+            // 先添加数据
+            const docRef = await db.collection('payments').add(paymentData);
+            
+            // 单独更新 createdAt 字段（使用 update 而不是 set）
+            await db.collection('payments').doc(docRef.id).update({
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            // 重置表单
             document.getElementById('paymentForm').reset();
             document.getElementById('paymentDate').valueAsDate = new Date();
+            
+            // 刷新列表和统计
             loadPayments();
             loadPaymentStats();
+            
             showSuccessMessage('支付记录添加成功');
         } catch (error) {
             console.error('添加支付记录失败:', error);
