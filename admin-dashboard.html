@@ -12,41 +12,41 @@
 <body>
     <div class="admin-container">
         <!-- 侧边栏 - 添加ID和关闭按钮 -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2><i class="fas fa-car"></i> CarService Pro</h2>
-                <!-- 添加关闭按钮（移动端显示） -->
-                <button class="close-sidebar" onclick="closeSidebar()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <ul class="sidebar-menu">
-                <li class="active" data-page="dashboard">
-                    <i class="fas fa-dashboard"></i> 仪表板
-                </li>
-                <li data-page="cars">
-                    <i class="fas fa-car"></i> 汽车管理
-                </li>
-                <li data-page="appointments">
-                    <i class="fas fa-calendar-check"></i> 预约管理
-                </li>
-                <li data-page="services">
-                    <i class="fas fa-tools"></i> 服务记录
-                </li>
-                <li data-page="payments">
-                    <i class="fas fa-credit-card"></i> 支付记录
-                </li>
-                <li data-page="reports">
-                    <i class="fas fa-chart-bar"></i> 数据报表
-                </li>
-                <li data-page="users">
-                    <i class="fas fa-users"></i> 用户管理
-                </li>
-                <li data-page="settings">
-                    <i class="fas fa-cog"></i> 系统设置
-                </li>
-            </ul>
-        </div>
+        <<!-- 侧边栏 -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-car"></i> CarService Pro</h2>
+        <button class="close-sidebar" onclick="closeSidebar()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <ul class="sidebar-menu">
+        <li class="active" data-page="dashboard">
+            <i class="fas fa-dashboard"></i> 仪表板
+        </li>
+        <li data-page="cars">
+            <i class="fas fa-car"></i> 汽车管理
+        </li>
+        <li data-page="appointments">
+            <i class="fas fa-calendar-check"></i> 预约管理
+        </li>
+        <li data-page="services">
+            <i class="fas fa-tools"></i> 服务记录
+        </li>
+        <li data-page="payments">
+            <i class="fas fa-credit-card"></i> 支付记录
+        </li>
+        <li data-page="reports">
+            <i class="fas fa-chart-bar"></i> 数据报表
+        </li>
+        <li data-page="users">
+            <i class="fas fa-users"></i> 用户管理
+        </li>
+        <li data-page="settings">
+            <i class="fas fa-cog"></i> 系统设置
+        </li>
+    </ul>
+</div>
 
         <!-- 主内容区 -->
         <div class="main-content">
@@ -165,28 +165,46 @@
 
     <!-- 添加侧边栏控制函数 -->
     <script>
-        // 侧边栏控制函数
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.querySelector('.mobile-overlay');
-            
-            if (sidebar) {
-                sidebar.classList.toggle('open');
-            }
-            
-            if (overlay) {
-                overlay.classList.toggle('show');
-            }
-            
-            // 禁止body滚动
-            if (sidebar && sidebar.classList.contains('open')) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = '';
-            }
+    // 侧边栏控制函数
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.mobile-overlay');
+        
+        if (sidebar) {
+            sidebar.classList.toggle('open');
+            console.log('Sidebar toggled:', sidebar.classList.contains('open')); // 调试用
         }
+        
+        if (overlay) {
+            overlay.classList.toggle('show');
+        }
+        
+        // 禁止body滚动
+        if (sidebar && sidebar.classList.contains('open')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
 
-        function closeSidebar() {
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.mobile-overlay');
+        
+        if (sidebar) {
+            sidebar.classList.remove('open');
+        }
+        
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+        
+        document.body.style.overflow = '';
+    }
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.mobile-overlay');
             
@@ -200,34 +218,23 @@
             
             document.body.style.overflow = '';
         }
+    });
 
-        // 监听窗口大小变化，自动关闭侧边栏
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768) {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.querySelector('.mobile-overlay');
-                
-                if (sidebar) {
-                    sidebar.classList.remove('open');
-                }
-                
-                if (overlay) {
-                    overlay.classList.remove('show');
-                }
-                
-                document.body.style.overflow = '';
-            }
-        });
+    // 点击菜单项后自动关闭侧边栏
+    document.addEventListener('click', (e) => {
+        const menuItem = e.target.closest('.sidebar-menu li');
+        if (menuItem && window.innerWidth <= 768) {
+            setTimeout(() => {
+                closeSidebar();
+            }, 300);
+        }
+    });
 
-        // 点击菜单项后自动关闭侧边栏（移动端）
-        document.addEventListener('click', (e) => {
-            const menuItem = e.target.closest('.sidebar-menu li');
-            if (menuItem && window.innerWidth <= 768) {
-                setTimeout(() => {
-                    closeSidebar();
-                }, 300);
-            }
-        });
-    </script>
+    // 调试：检查侧边栏状态
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Sidebar element:', document.getElementById('sidebar'));
+        console.log('Mobile menu button:', document.querySelector('.mobile-menu-btn'));
+    });
+</script>
 </body>
 </html>
