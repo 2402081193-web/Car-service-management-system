@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>管理员仪表板 - 汽车服务管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
@@ -11,48 +11,67 @@
 </head>
 <body>
     <div class="admin-container">
+        <!-- 侧边栏遮罩层（移动端） -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+        
         <!-- 侧边栏 -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-car"></i> CarService Pro</h2>
-                <p>管理员面板</p>
+                <h2>
+                    <i class="fas fa-car"></i>
+                    <span>CarService Pro</span>
+                </h2>
+                <button class="toggle-sidebar" onclick="toggleSidebar()" id="toggleSidebarBtn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
             </div>
             <ul class="sidebar-menu">
                 <li class="active" data-page="dashboard">
-                    <i class="fas fa-dashboard"></i> 仪表板
+                    <i class="fas fa-dashboard"></i>
+                    <span>仪表板</span>
                 </li>
                 <li data-page="cars">
-                    <i class="fas fa-car"></i> 汽车管理
+                    <i class="fas fa-car"></i>
+                    <span>汽车管理</span>
                 </li>
                 <li data-page="appointments">
-                    <i class="fas fa-calendar-check"></i> 预约管理
+                    <i class="fas fa-calendar-check"></i>
+                    <span>预约管理</span>
                 </li>
                 <li data-page="services">
-                    <i class="fas fa-tools"></i> 服务记录
+                    <i class="fas fa-tools"></i>
+                    <span>服务记录</span>
                 </li>
                 <li data-page="payments">
-                    <i class="fas fa-credit-card"></i> 支付记录
+                    <i class="fas fa-credit-card"></i>
+                    <span>支付记录</span>
                 </li>
                 <li data-page="reports">
-                    <i class="fas fa-chart-bar"></i> 数据报表
+                    <i class="fas fa-chart-bar"></i>
+                    <span>数据报表</span>
                 </li>
                 <li data-page="users">
-                    <i class="fas fa-users"></i> 用户管理
+                    <i class="fas fa-users"></i>
+                    <span>用户管理</span>
                 </li>
                 <li data-page="settings">
-                    <i class="fas fa-cog"></i> 系统设置
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
                 </li>
             </ul>
         </div>
 
         <!-- 主内容区 -->
-        <div class="main-content">
+        <div class="main-content" id="mainContent">
             <div class="top-bar">
-                <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <span class="page-title" id="pageTitle">仪表板</span>
                     
-                    <!-- 搜索框 - 新增 -->
-                    <div class="search-container" style="flex: 1; max-width: 400px;">
+                    <!-- 搜索框 -->
+                    <div class="search-container">
                         <div class="search-box">
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" id="globalSearch" class="search-input" placeholder="搜索客户手机号或邮箱...">
@@ -150,6 +169,116 @@
     <script src="js/admin/reports.js"></script>
     <script src="js/admin/users.js"></script>
     <script src="js/admin/settings.js"></script>
-    <script src="js/admin/search.js"></script>  <!-- 新增搜索模块 -->
+    <script src="js/admin/search.js"></script>
+
+    <script>
+        // 侧边栏状态
+        let sidebarCollapsed = false;
+        
+        // 切换侧边栏收纳状态
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebarBtn');
+            
+            sidebarCollapsed = !sidebarCollapsed;
+            
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            }
+            
+            // 保存状态到 localStorage
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        }
+        
+        // 移动端切换侧边栏
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+            
+            // 防止body滚动
+            if (sidebar.classList.contains('mobile-open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // 关闭移动端侧边栏
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 初始化侧边栏状态
+        function initSidebar() {
+            // 检查 localStorage 中保存的状态
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            
+            if (savedState === 'true') {
+                sidebarCollapsed = true;
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.getElementById('mainContent').classList.add('expanded');
+                document.getElementById('toggleSidebarBtn').innerHTML = '<i class="fas fa-chevron-right"></i>';
+            }
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    // 桌面端：如果有移动端打开状态，关闭它
+                    document.getElementById('sidebar').classList.remove('mobile-open');
+                    document.getElementById('sidebarOverlay').classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // 移动端：如果有收纳状态，但不影响
+                    // 不做特殊处理
+                }
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initSidebar();
+        });
+        
+        // 搜索功能（需要在 search.js 中实现）
+        function performSearch() {
+            if (typeof window.performSearch === 'function') {
+                window.performSearch();
+            } else {
+                console.error('搜索功能未加载');
+                alert('搜索功能正在加载中...');
+            }
+        }
+        
+        function closeSearchModal() {
+            if (typeof window.closeSearchModal === 'function') {
+                window.closeSearchModal();
+            }
+        }
+        
+        // 登出功能
+        function logout() {
+            if (typeof window.logout === 'function') {
+                window.logout();
+            } else {
+                console.error('登出功能未加载');
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
 </body>
 </html>
