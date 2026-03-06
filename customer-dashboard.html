@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
 </head>
 <body>
     <!-- 导航栏 -->
@@ -21,27 +22,27 @@
         </div>
     </div>
 
-    <div class="customer-container" style="display: flex; gap: 25px;">
+    <div class="customer-container" style="display: flex; gap: 25px; max-width: 1400px; margin: 30px auto; padding: 0 20px;">
         <!-- 左侧菜单 -->
         <div style="width: 280px;">
-            <div class="profile-sidebar">
-                <div class="profile-avatar">
+            <div class="profile-sidebar" style="background: white; border-radius: 12px; padding: 30px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div class="profile-avatar" style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: white; font-size: 2.5rem;">
                     <i class="fas fa-user"></i>
                 </div>
-                <h3 style="text-align: center; margin: 10px 0;" id="profileName">加载中...</h3>
-                <p style="text-align: center; color: #666;" id="profileEmail"></p>
+                <h3 style="text-align: center; margin: 10px 0; color: #1e293b;" id="profileName">加载中...</h3>
+                <p style="text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 25px;" id="profileEmail"></p>
 
-                <ul class="sidebar-menu" style="margin-top: 30px;">
-                    <li class="active" data-page="my-cars">
+                <ul class="sidebar-menu" style="list-style: none; margin-top: 20px; padding: 0;">
+                    <li class="active" data-page="my-cars" style="padding: 12px 15px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #475569; background: #dbeafe; color: #3b82f6; font-weight: 500;">
                         <i class="fas fa-car"></i> 我的爱车
                     </li>
-                    <li data-page="my-appointments">
+                    <li data-page="my-appointments" style="padding: 12px 15px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #475569;">
                         <i class="fas fa-calendar-check"></i> 我的预约
                     </li>
-                    <li data-page="my-services">
+                    <li data-page="my-services" style="padding: 12px 15px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #475569;">
                         <i class="fas fa-tools"></i> 服务历史
                     </li>
-                    <li data-page="my-payments">
+                    <li data-page="my-payments" style="padding: 12px 15px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #475569;">
                         <i class="fas fa-credit-card"></i> 支付记录
                     </li>
                 </ul>
@@ -50,44 +51,92 @@
 
         <!-- 右侧内容 -->
         <div style="flex: 1;">
-            <div id="customerContent"></div>
+            <div id="customerContent">
+                <!-- 欢迎卡片（默认显示） -->
+                <div id="welcomeCard" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+                    <h2 style="font-size: 2rem; margin-bottom: 15px;">欢迎回来，<span id="welcomeName">尊贵的车主</span></h2>
+                    <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 25px;">在这里您可以管理您的爱车、预约服务、查看历史记录等。</p>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn btn-primary" onclick="showBookingModal()" style="padding: 12px 30px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-calendar-plus"></i> 快速预约
+                        </button>
+                        <button class="btn btn-outline" onclick="loadMyCars()" style="padding: 12px 30px; background: transparent; border: 2px solid white; color: white; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-car"></i> 查看爱车
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- 预约模态框 -->
-    <div id="bookingModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px;">
-            <h3 style="margin-bottom: 20px;">预约服务</h3>
+    <div id="bookingModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 20px; font-size: 1.3rem;">预约服务</h3>
             <form id="bookingForm">
-                <div class="form-group">
-                    <label>选择车辆</label>
-                    <select id="bookingCarId" required>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">选择车辆</label>
+                    <select id="bookingCarId" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
                         <option value="">请选择</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>服务类型</label>
-                    <select id="bookingServiceType" required>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">服务类型</label>
+                    <select id="bookingServiceType" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
                         <option value="保养">保养</option>
                         <option value="维修">维修</option>
                         <option value="检测">检测</option>
+                        <option value="美容">美容</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>预约日期</label>
-                    <input type="date" id="bookingDate" required>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">预约日期</label>
+                    <input type="date" id="bookingDate" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
                 </div>
-                <div class="form-group">
-                    <label>预约时间</label>
-                    <input type="time" id="bookingTime" required>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">预约时间</label>
+                    <input type="time" id="bookingTime" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
                 </div>
-                <div class="form-group">
-                    <label>备注</label>
-                    <textarea id="bookingNotes" rows="3"></textarea>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">备注</label>
+                    <textarea id="bookingNotes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;"></textarea>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">确认预约</button>
-                    <button type="button" class="btn" onclick="closeBookingModal()" style="flex: 1;">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitBooking()" style="flex: 1; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">确认预约</button>
+                    <button type="button" class="btn" onclick="closeBookingModal()" style="flex: 1; padding: 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加车辆模态框 -->
+    <div id="addCarModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px;">
+            <h3 style="margin-bottom: 20px; font-size: 1.3rem;">添加爱车</h3>
+            <form id="addCarForm">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">车牌号</label>
+                    <input type="text" id="carPlate" placeholder="例如: 京A12345" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">车型</label>
+                    <input type="text" id="carModel" placeholder="例如: 特斯拉Model 3" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">品牌</label>
+                    <input type="text" id="carBrand" placeholder="例如: 特斯拉" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">颜色</label>
+                    <input type="text" id="carColor" placeholder="例如: 白色" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #475569;">备注</label>
+                    <textarea id="carNotes" rows="2" placeholder="例如: 购车日期、特殊配置等" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-primary" onclick="submitAddCar()" style="flex: 1; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">添加</button>
+                    <button type="button" class="btn" onclick="closeAddCarModal()" style="flex: 1; padding: 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">取消</button>
                 </div>
             </form>
         </div>
