@@ -5,7 +5,20 @@ let currentUser = null;
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Admin DOM loaded');
+    
+    // 确保页面元素存在
+    ensureElements();
 });
+
+// 确保必要元素存在
+function ensureElements() {
+    const elements = ['userName', 'pageTitle', 'errorMessage', 'pageContent'];
+    elements.forEach(id => {
+        if (!document.getElementById(id)) {
+            console.warn(`Element #${id} not found`);
+        }
+    });
+}
 
 // 监听认证状态
 auth.onAuthStateChanged(async (user) => {
@@ -20,6 +33,7 @@ auth.onAuthStateChanged(async (user) => {
             
             if (!userDoc.exists) {
                 console.error('User document not found');
+                await auth.signOut();
                 window.location.href = 'index.html';
                 return;
             }
@@ -29,20 +43,24 @@ auth.onAuthStateChanged(async (user) => {
             // 检查角色
             if (userData.role !== 'admin') {
                 console.error('Not an admin user');
+                await auth.signOut();
                 alert('您没有管理员权限');
                 window.location.href = 'customer-dashboard.html';
                 return;
             }
             
             // 显示用户名
-            document.getElementById('userName').textContent = userData.name || '管理员';
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl) {
+                userNameEl.textContent = userData.name || '管理员';
+            }
             
             // 加载仪表板
-            loadDashboard();
+            await loadDashboard();
             
         } catch (error) {
             console.error('Error loading admin data:', error);
-            showError('加载管理员信息失败');
+            showError('加载管理员信息失败: ' + error.message);
         }
     } else {
         // 未登录，跳转到登录页
@@ -67,20 +85,37 @@ document.querySelectorAll('.sidebar-menu li').forEach(item => {
         
         // 更新页面标题
         const pageTitle = item.textContent.trim();
-        document.getElementById('pageTitle').textContent = pageTitle;
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) {
+            titleEl.textContent = pageTitle;
+        }
         
         // 加载对应页面
         if (currentUser) {
             loadPage(currentPage);
+        } else {
+            console.error('No user logged in');
+            window.location.href = 'index.html';
         }
     });
 });
 
 // 页面加载函数
-// 页面加载函数
 function loadPage(page) {
     console.log('Loading page:', page);
     
+    // 显示加载状态
+    const container = document.getElementById('pageContent');
+    if (container) {
+        container.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        `;
+    }
+    
+    // 根据页面加载不同模块
     switch(page) {
         case 'dashboard':
             loadDashboard();
@@ -91,6 +126,7 @@ function loadPage(page) {
             } else {
                 console.error('loadCarsPage not defined');
                 showError('汽车管理模块加载失败');
+                loadDashboard(); // 回退到仪表板
             }
             break;
         case 'appointments':
@@ -99,6 +135,7 @@ function loadPage(page) {
             } else {
                 console.error('loadAppointmentsPage not defined');
                 showError('预约管理模块加载失败');
+                loadDashboard();
             }
             break;
         case 'services':
@@ -107,6 +144,7 @@ function loadPage(page) {
             } else {
                 console.error('loadServicesPage not defined');
                 showError('服务记录模块加载失败');
+                loadDashboard();
             }
             break;
         case 'payments':
@@ -115,6 +153,7 @@ function loadPage(page) {
             } else {
                 console.error('loadPaymentsPage not defined');
                 showError('支付管理模块加载失败');
+                loadDashboard();
             }
             break;
         case 'reports':
@@ -123,6 +162,7 @@ function loadPage(page) {
             } else {
                 console.error('loadReportsPage not defined');
                 showError('报表模块加载失败');
+                loadDashboard();
             }
             break;
         case 'users':
@@ -131,6 +171,7 @@ function loadPage(page) {
             } else {
                 console.error('loadUsersPage not defined');
                 showError('用户管理模块加载失败');
+                loadDashboard();
             }
             break;
         case 'settings':
@@ -140,7 +181,6 @@ function loadPage(page) {
                 console.error('loadSettingsPage not defined');
                 showError('系统设置模块加载失败');
                 // 显示一个临时提示
-                const container = document.getElementById('pageContent');
                 if (container) {
                     container.innerHTML = `
                         <div class="alert alert-warning">
@@ -159,17 +199,29 @@ function loadPage(page) {
 
 // 显示错误
 function showError(message) {
+    console.error('Error:', message);
+    
     const errorEl = document.getElementById('errorMessage');
     if (errorEl) {
         errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         errorEl.style.display = 'block';
         
+        // 自动滚动到错误提示
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
         setTimeout(() => {
             errorEl.style.display = 'none';
         }, 5000);
     } else {
-        console.error(message);
-        alert(message);
+        // 如果没有错误容器，创建临时提示
+        const toast = document.createElement('div');
+        toast.className = 'error-toast';
+        toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
     }
 }
 
@@ -191,7 +243,10 @@ function showSuccess(message) {
 // 加载仪表板
 async function loadDashboard() {
     const container = document.getElementById('pageContent');
-    if (!container) return;
+    if (!container) {
+        console.error('Page content container not found');
+        return;
+    }
     
     container.innerHTML = `
         <div class="cards-grid">
@@ -255,22 +310,38 @@ async function loadDashboardStats() {
     try {
         console.log('Loading dashboard stats...');
         
+        // 检查所有必要的元素是否存在
+        const elements = {
+            totalCars: document.getElementById('totalCars'),
+            todayAppointments: document.getElementById('todayAppointments'),
+            pendingServices: document.getElementById('pendingServices'),
+            monthlyRevenue: document.getElementById('monthlyRevenue'),
+            recentAppointments: document.getElementById('recentAppointments')
+        };
+        
+        // 如果任何元素缺失，返回
+        if (!elements.totalCars || !elements.todayAppointments || !elements.pendingServices || 
+            !elements.monthlyRevenue || !elements.recentAppointments) {
+            console.error('Required elements not found');
+            return;
+        }
+        
         // 总汽车数
         const carsSnapshot = await db.collection('cars').get();
-        document.getElementById('totalCars').textContent = carsSnapshot.size || 0;
+        elements.totalCars.textContent = carsSnapshot.size || 0;
 
         // 今日预约
         const today = new Date().toISOString().split('T')[0];
         const appointmentsSnapshot = await db.collection('appointments')
             .where('date', '==', today)
             .get();
-        document.getElementById('todayAppointments').textContent = appointmentsSnapshot.size || 0;
+        elements.todayAppointments.textContent = appointmentsSnapshot.size || 0;
 
         // 待处理服务
         const pendingSnapshot = await db.collection('services')
             .where('status', '==', 'pending')
             .get();
-        document.getElementById('pendingServices').textContent = pendingSnapshot.size || 0;
+        elements.pendingServices.textContent = pendingSnapshot.size || 0;
 
         // 本月收入
         const now = new Date();
@@ -287,7 +358,7 @@ async function loadDashboardStats() {
         paymentsSnapshot.forEach(doc => {
             monthlyTotal += doc.data().amount || 0;
         });
-        document.getElementById('monthlyRevenue').textContent = `¥${monthlyTotal.toFixed(2)}`;
+        elements.monthlyRevenue.textContent = `¥${monthlyTotal.toFixed(2)}`;
 
         // 最近预约
         const recentSnapshot = await db.collection('appointments')
@@ -296,11 +367,10 @@ async function loadDashboardStats() {
             .limit(5)
             .get();
 
-        const tbody = document.getElementById('recentAppointments');
-        tbody.innerHTML = '';
+        elements.recentAppointments.innerHTML = '';
 
         if (recentSnapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">暂无预约</td></tr>';
+            elements.recentAppointments.innerHTML = '<tr><td colspan="4" class="empty-state">暂无预约</td></tr>';
         } else {
             for (const doc of recentSnapshot.docs) {
                 const apt = doc.data();
@@ -308,19 +378,21 @@ async function loadDashboardStats() {
                 // 获取汽车信息
                 let plate = '未知';
                 try {
-                    const carDoc = await db.collection('cars').doc(apt.carId).get();
-                    if (carDoc.exists) {
-                        plate = carDoc.data().plate || '未知';
+                    if (apt.carId) {
+                        const carDoc = await db.collection('cars').doc(apt.carId).get();
+                        if (carDoc.exists) {
+                            plate = carDoc.data().plate || '未知';
+                        }
                     }
                 } catch (error) {
                     console.error('Error loading car:', error);
                 }
                 
-                tbody.innerHTML += `
+                elements.recentAppointments.innerHTML += `
                     <tr>
-                        <td><strong>${plate}</strong></td>
-                        <td>${apt.serviceType || '-'}</td>
-                        <td>${apt.date || '-'} ${apt.time || ''}</td>
+                        <td><strong>${escapeHtml(plate)}</strong></td>
+                        <td>${escapeHtml(apt.serviceType || '-')}</td>
+                        <td>${escapeHtml(apt.date || '-')} ${escapeHtml(apt.time || '')}</td>
                         <td><span class="badge badge-${apt.status || 'pending'}">${getStatusText(apt.status)}</span></td>
                     </tr>
                 `;
@@ -335,10 +407,17 @@ async function loadDashboardStats() {
         showError('加载数据失败: ' + error.message);
         
         // 设置默认值
-        document.getElementById('totalCars').textContent = '0';
-        document.getElementById('todayAppointments').textContent = '0';
-        document.getElementById('pendingServices').textContent = '0';
-        document.getElementById('monthlyRevenue').textContent = '¥0';
+        const elements = {
+            totalCars: document.getElementById('totalCars'),
+            todayAppointments: document.getElementById('todayAppointments'),
+            pendingServices: document.getElementById('pendingServices'),
+            monthlyRevenue: document.getElementById('monthlyRevenue')
+        };
+        
+        if (elements.totalCars) elements.totalCars.textContent = '0';
+        if (elements.todayAppointments) elements.todayAppointments.textContent = '0';
+        if (elements.pendingServices) elements.pendingServices.textContent = '0';
+        if (elements.monthlyRevenue) elements.monthlyRevenue.textContent = '¥0';
     }
 }
 
@@ -400,60 +479,171 @@ async function createRevenueChart() {
     }
 
     // 创建新图表
-    window.revenueChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: hasData ? labels : ['1/1', '1/2', '1/3', '1/4', '1/5', '1/6', '1/7'],
-            datasets: [{
-                label: '每日收入 (¥)',
-                data: chartData,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#3b82f6',
-                pointBorderColor: 'white',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                title: {
-                    display: true,
-                    text: hasData ? '最近7天收入趋势' : '示例数据（暂无真实数据）'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `¥${context.raw.toFixed(2)}`;
+    try {
+        window.revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: hasData ? labels : ['1/1', '1/2', '1/3', '1/4', '1/5', '1/6', '1/7'],
+                datasets: [{
+                    label: '每日收入 (¥)',
+                    data: chartData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: hasData ? '最近7天收入趋势' : '示例数据（暂无真实数据）'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `¥${context.raw.toFixed(2)}`;
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '¥' + value;
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '¥' + value;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error creating chart:', error);
+    }
 }
+
+// 辅助函数：转义HTML
+function escapeHtml(text) {
+    if (!text) return '-';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 添加CSS样式（如果还没有）
+function addStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .loading-container {
+            text-align: center;
+            padding: 50px;
+            color: #64748b;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-toast, .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .error-toast {
+            background: #ef4444;
+        }
+        
+        .success-toast {
+            background: #22c55e;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .badge-pending {
+            background: #fef9c3;
+            color: #854d0e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .badge-confirmed {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .badge-completed {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .badge-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// 添加样式
+addStyles();
 
 // 导出函数到全局
 window.showError = showError;
 window.showSuccess = showSuccess;
 window.getStatusText = getStatusText;
+window.escapeHtml = escapeHtml;
