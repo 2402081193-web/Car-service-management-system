@@ -740,3 +740,60 @@ code {
     font-size: 0.9rem;
     margin-top: 10px;
 }
+
+/* 按钮样式 */
+.btn-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.btn-info:hover {
+    background: #bfdbfe;
+}
+
+/* 警告文本 */
+.text-warning {
+    color: #b45309;
+    background: #fffbeb;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    border-left: 4px solid #f59e0b;
+}
+
+.text-warning i {
+    margin-right: 5px;
+}
+
+/* 模态框样式优化 */
+.modal-content {
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+}
