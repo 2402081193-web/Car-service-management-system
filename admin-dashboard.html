@@ -2,16 +2,16 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>管理员仪表板 - 汽车服务管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <!-- 确保 dashboard.css 路径正确 -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
 </head>
 <body>
     <div class="admin-container">
-        <!-- 侧边栏遮罩层 -->
+        <!-- 侧边栏遮罩层（移动端） -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
         
         <!-- 侧边栏 -->
@@ -64,38 +64,112 @@
         <!-- 主内容区 -->
         <div class="main-content" id="mainContent">
             <div class="top-bar">
-                <div style="display: flex; align-items: center;">
+                <div class="top-bar-left">
                     <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
                     <span class="page-title" id="pageTitle">仪表板</span>
+                    
+                    <!-- 搜索框 -->
+                    <div class="search-container">
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="globalSearch" class="search-input" placeholder="搜索客户手机号或邮箱...">
+                            <button class="btn btn-primary search-btn" onclick="performSearch()">搜索</button>
+                        </div>
+                        <div id="searchResults" class="search-results" style="display: none;"></div>
+                    </div>
                 </div>
                 
                 <div class="user-info">
                     <span class="user-name" id="userName">加载中...</span>
-                    <button class="btn btn-danger btn-sm" onclick="logout()">退出</button>
+                    <button class="btn btn-danger btn-sm" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> 退出
+                    </button>
                 </div>
             </div>
 
-            <!-- 卡片区域 -->
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-info">
-                        <h3>总汽车数</h3>
-                        <div class="number" id="totalCars">1</div>
-                    </div>
-                    <div class="card-icon icon-blue"><i class="fas fa-car"></i></div>
-                </div>
-                <div class="card">
-                    <div class="card-info">
-                        <h3>待处理服务</h3>
-                        <div class="number" id="pendingServices">0</div>
-                    </div>
-                    <div class="card-icon icon-yellow"><i class="fas fa-tools"></i></div>
-                </div>
+            <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+            <div id="pageContent"></div>
+        </div>
+    </div>
+
+    <!-- 搜索结果模态框 -->
+    <div class="modal" id="searchResultModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-search"></i> 客户信息详情</h3>
+                <span class="close" onclick="closeSearchModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="searchResultContent">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSearchModal()">关闭</button>
             </div>
         </div>
     </div>
+
+    <!-- 提升管理员模态框 -->
+    <div class="modal" id="promoteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="promoteModalTitle">提升为管理员</h3>
+                <span class="close" onclick="closePromoteModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>请输入管理员注册密码以确认操作：</p>
+                <input type="password" id="promotePassword" class="form-control" placeholder="请输入管理员密码">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="confirmPromote()">确认提升</button>
+                <button class="btn btn-secondary" onclick="closePromoteModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移除管理员模态框 -->
+    <div class="modal" id="demoteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="demoteModalTitle">移除管理员</h3>
+                <span class="close" onclick="closeDemoteModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>确定要将 <strong id="demoteUserName"></strong> 的管理员权限移除吗？</p>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> 移除后该用户将成为普通车主。</p>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>请输入管理员密码确认操作：</label>
+                    <input type="password" id="demotePassword" class="form-control" placeholder="请输入管理员密码">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="confirmDemote()">确认移除</button>
+                <button class="btn btn-secondary" onclick="closeDemoteModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 引入自定义脚本 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin/admin.js"></script>
+    <script src="js/admin/cars.js"></script>
+    <script src="js/admin/appointments.js"></script>
+    <script src="js/admin/services.js"></script>
+    <script src="js/admin/payments.js"></script>
+    <script src="js/admin/reports.js"></script>
+    <script src="js/admin/users.js"></script>
+    <script src="js/admin/settings.js"></script>
+    <script src="js/admin/search.js"></script>
 
     <script>
         // 侧边栏状态
@@ -118,6 +192,9 @@
                 mainContent.classList.remove('expanded');
                 toggleBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
             }
+            
+            // 保存状态到 localStorage
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
         }
         
         // 移动端切换侧边栏
@@ -127,6 +204,13 @@
             
             sidebar.classList.toggle('mobile-open');
             overlay.classList.toggle('active');
+            
+            // 防止body滚动
+            if (sidebar.classList.contains('mobile-open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
         }
         
         // 关闭移动端侧边栏
@@ -136,11 +220,64 @@
             
             sidebar.classList.remove('mobile-open');
             overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 初始化侧边栏状态
+        function initSidebar() {
+            // 检查 localStorage 中保存的状态
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            
+            if (savedState === 'true') {
+                sidebarCollapsed = true;
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.getElementById('mainContent').classList.add('expanded');
+                document.getElementById('toggleSidebarBtn').innerHTML = '<i class="fas fa-chevron-right"></i>';
+            }
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    // 桌面端：如果有移动端打开状态，关闭它
+                    document.getElementById('sidebar').classList.remove('mobile-open');
+                    document.getElementById('sidebarOverlay').classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // 移动端：如果有收纳状态，但不影响
+                    // 不做特殊处理
+                }
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initSidebar();
+        });
+        
+        // 搜索功能（需要在 search.js 中实现）
+        function performSearch() {
+            if (typeof window.performSearch === 'function') {
+                window.performSearch();
+            } else {
+                console.error('搜索功能未加载');
+                alert('搜索功能正在加载中...');
+            }
+        }
+        
+        function closeSearchModal() {
+            if (typeof window.closeSearchModal === 'function') {
+                window.closeSearchModal();
+            }
         }
         
         // 登出功能
         function logout() {
-            window.location.href = 'index.html';
+            if (typeof window.logout === 'function') {
+                window.logout();
+            } else {
+                console.error('登出功能未加载');
+                window.location.href = 'index.html';
+            }
         }
     </script>
 </body>
