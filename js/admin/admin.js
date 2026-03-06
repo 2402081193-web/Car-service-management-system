@@ -54,11 +54,22 @@ auth.onAuthStateChanged(async (user) => {
 // 菜单点击事件
 document.querySelectorAll('.sidebar-menu li').forEach(item => {
     item.addEventListener('click', () => {
-        document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
-        item.classList.add('active');
-        currentPage = item.dataset.page;
-        document.getElementById('pageTitle').textContent = item.textContent.trim();
+        // 移除所有active类
+        document.querySelectorAll('.sidebar-menu li').forEach(li => {
+            li.classList.remove('active');
+        });
         
+        // 添加active类到当前项
+        item.classList.add('active');
+        
+        // 获取页面名称
+        currentPage = item.dataset.page;
+        
+        // 更新页面标题
+        const pageTitle = item.textContent.trim();
+        document.getElementById('pageTitle').textContent = pageTitle;
+        
+        // 加载对应页面
         if (currentUser) {
             loadPage(currentPage);
         }
@@ -67,6 +78,8 @@ document.querySelectorAll('.sidebar-menu li').forEach(item => {
 
 // 页面加载函数
 function loadPage(page) {
+    console.log('Loading page:', page);
+    
     switch(page) {
         case 'dashboard':
             loadDashboard();
@@ -111,6 +124,17 @@ function loadPage(page) {
                 showError('报表模块加载失败');
             }
             break;
+        case 'users':
+            if (typeof loadUsersPage === 'function') {
+                loadUsersPage();
+            } else {
+                console.error('loadUsersPage not defined');
+                showError('用户管理模块加载失败');
+            }
+            break;
+        default:
+            console.warn('Unknown page:', page);
+            loadDashboard();
     }
 }
 
@@ -118,7 +142,7 @@ function loadPage(page) {
 function showError(message) {
     const errorEl = document.getElementById('errorMessage');
     if (errorEl) {
-        errorEl.textContent = message;
+        errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         errorEl.style.display = 'block';
         
         setTimeout(() => {
@@ -128,6 +152,21 @@ function showError(message) {
         console.error(message);
         alert(message);
     }
+}
+
+// 显示成功消息
+function showSuccess(message) {
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }
 
 // 加载仪表板
@@ -394,3 +433,8 @@ async function createRevenueChart() {
         }
     });
 }
+
+// 导出函数到全局
+window.showError = showError;
+window.showSuccess = showSuccess;
+window.getStatusText = getStatusText;
