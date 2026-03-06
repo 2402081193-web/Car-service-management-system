@@ -16,6 +16,10 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// 管理员注册密码（可以修改）
+const ADMIN_REGISTER_PASSWORD = "ADMIN2024";
+
 // 导出全局变量
 window.auth = auth;
 window.db = db;
+window.ADMIN_REGISTER_PASSWORD = ADMIN_REGISTER_PASSWORD;
