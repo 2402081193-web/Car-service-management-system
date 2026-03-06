@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汽车服务管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
     <style>
         .role-container {
             display: flex;
             gap: 30px;
             justify-content: center;
             margin-top: 40px;
+            flex-wrap: wrap;
         }
         
         .role-card {
@@ -22,6 +24,7 @@
             cursor: pointer;
             transition: all 0.3s;
             flex: 1;
+            min-width: 250px;
             max-width: 300px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
@@ -56,11 +59,11 @@
         .footer {
             text-align: center;
             margin-top: 40px;
-            color: white;
+            color: #666;
         }
         
         .footer a {
-            color: white;
+            color: #667eea;
             text-decoration: none;
             margin: 0 10px;
         }
@@ -68,14 +71,25 @@
         .footer a:hover {
             text-decoration: underline;
         }
+        
+        .brand-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .brand-section h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <i class="fas fa-car" style="font-size: 4rem; color: white;"></i>
-            <h1 style="color: white; margin-top: 10px;">汽车服务管理系统</h1>
-            <p style="color: rgba(255,255,255,0.9);">请选择您的身份登录</p>
+    <div class="container" style="max-width: 1200px; margin: 50px auto; padding: 0 20px;">
+        <div class="brand-section">
+            <i class="fas fa-car" style="font-size: 5rem; color: #667eea;"></i>
+            <h1>汽车服务管理系统</h1>
+            <p style="color: #666; font-size: 1.1rem;">专业的汽车服务管理平台，为车主和商家提供便捷的服务管理体验。</p>
         </div>
         
         <div class="role-container">
@@ -83,14 +97,14 @@
                 <i class="fas fa-user"></i>
                 <h2>车主</h2>
                 <p>管理您的爱车、预约服务、查看记录</p>
-                <button class="btn">车主登录</button>
+                <button class="btn btn-primary">车主登录</button>
             </div>
             
             <div class="role-card" onclick="location.href='admin/login.html'">
                 <i class="fas fa-user-tie"></i>
                 <h2>管理员</h2>
                 <p>管理车辆、服务、支付、用户</p>
-                <button class="btn">管理员登录</button>
+                <button class="btn btn-primary">管理员登录</button>
             </div>
         </div>
         
