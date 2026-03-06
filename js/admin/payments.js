@@ -96,41 +96,37 @@ function loadPaymentsPage() {
     // 设置默认日期
     document.getElementById('paymentDate').valueAsDate = new Date();
 
-    // 表单提交 - 修复时间戳问题
+    // 表单提交 - 完全移除时间戳问题
     document.getElementById('paymentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // 验证必填字段
         const carId = document.getElementById('paymentCarId').value;
         if (!carId) {
-            showErrorMessage('请选择汽车');
+            alert('请选择汽车');
             return;
         }
 
         const amount = parseFloat(document.getElementById('paymentAmount').value);
         if (isNaN(amount) || amount <= 0) {
-            showErrorMessage('请输入有效的金额');
+            alert('请输入有效的金额');
             return;
         }
 
-        // 创建数据对象，不包含 createdAt 字段
+        // 创建数据对象 - 不包含任何时间戳字段
         const paymentData = {
-            carId: carId,
-            amount: amount,
-            date: document.getElementById('paymentDate').value,
-            method: document.getElementById('paymentMethod').value,
-            status: document.getElementById('paymentStatus').value,
-            notes: document.getElementById('paymentNotes').value || ''
+    carId: carId,
+    amount: amount,
+    date: document.getElementById('paymentDate').value,
+    method: document.getElementById('paymentMethod').value,
+    status: document.getElementById('paymentStatus').value,
+    notes: document.getElementById('paymentNotes').value || '',
+    createdAt: new Date().toISOString()  // 使用普通日期字符串
         };
 
         try {
-            // 先添加数据
-            const docRef = await db.collection('payments').add(paymentData);
-            
-            // 单独更新 createdAt 字段（使用 update 而不是 set）
-            await db.collection('payments').doc(docRef.id).update({
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            // 直接添加数据，不加时间戳
+            await db.collection('payments').add(paymentData);
             
             // 重置表单
             document.getElementById('paymentForm').reset();
@@ -140,10 +136,12 @@ function loadPaymentsPage() {
             loadPayments();
             loadPaymentStats();
             
-            showSuccessMessage('支付记录添加成功');
+            // 显示成功消息
+            alert('支付记录添加成功');
+            
         } catch (error) {
             console.error('添加支付记录失败:', error);
-            showErrorMessage('添加失败: ' + error.message);
+            alert('添加失败: ' + error.message);
         }
     });
 
@@ -158,7 +156,7 @@ async function loadPaymentCarOptions() {
     select.innerHTML = '<option value="">加载中...</option>';
 
     try {
-        // 暂时去掉排序，避免索引问题
+        // 获取所有汽车
         const snapshot = await db.collection('cars').get();
         
         if (snapshot.empty) {
@@ -196,7 +194,7 @@ async function loadPayments() {
     tbody.innerHTML = '<tr><td colspan="6" class="loading">加载中...</td></tr>';
 
     try {
-        // 暂时去掉排序，避免索引问题
+        // 获取所有支付记录，不排序
         const snapshot = await db.collection('payments').get();
 
         if (snapshot.empty) {
@@ -314,10 +312,10 @@ window.deletePayment = async (paymentId) => {
         await db.collection('payments').doc(paymentId).delete();
         loadPayments();
         loadPaymentStats();
-        showSuccessMessage('删除成功');
+        alert('删除成功');
     } catch (error) {
         console.error('删除失败:', error);
-        showErrorMessage('删除失败: ' + error.message);
+        alert('删除失败: ' + error.message);
     }
 };
 
@@ -341,119 +339,3 @@ function getStatusText(status) {
     };
     return statusMap[status] || status || '未知';
 }
-
-// 显示成功消息
-function showSuccessMessage(message) {
-    // 检查是否已有成功提示函数
-    if (typeof window.showSuccess === 'function') {
-        window.showSuccess(message);
-        return;
-    }
-    
-    // 创建临时提示
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #22c55e;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    toast.innerHTML = `
-        <i class="fas fa-check-circle"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
-// 显示错误消息
-function showErrorMessage(message) {
-    // 检查是否已有错误提示函数
-    if (typeof window.showError === 'function') {
-        window.showError(message);
-        return;
-    }
-    
-    // 创建临时提示
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #ef4444;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    toast.innerHTML = `
-        <i class="fas fa-exclamation-circle"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
-// 添加动画样式
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    .badge-pending {
-        background: #fef9c3;
-        color: #854d0e;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    .badge-completed {
-        background: #dcfce7;
-        color: #166534;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    .badge-cancelled {
-        background: #fee2e2;
-        color: #991b1b;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-`;
-document.head.appendChild(style);
