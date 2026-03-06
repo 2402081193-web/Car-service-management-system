@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, waiting for auth...');
 });
 
-// 监听认证状态变化
+// 在 customer.js 的 auth.onAuthStateChanged 中添加欢迎卡片更新
 auth.onAuthStateChanged(async (user) => {
     console.log('Auth state changed:', user ? 'logged in' : 'not logged in');
     
@@ -16,39 +16,42 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = user;
         
         try {
-            // 获取用户详细信息
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 document.getElementById('userName').textContent = userData.name || '用户';
                 document.getElementById('profileName').textContent = userData.name || '用户';
                 document.getElementById('profileEmail').textContent = userData.email || '';
-            } else {
-                // 如果用户文档不存在，创建一个
-                await db.collection('users').doc(user.uid).set({
-                    uid: user.uid,
-                    name: user.displayName || '新用户',
-                    email: user.email,
-                    role: 'customer',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                document.getElementById('userName').textContent = user.displayName || '新用户';
-                document.getElementById('profileName').textContent = user.displayName || '新用户';
-                document.getElementById('profileEmail').textContent = user.email || '';
+                document.getElementById('welcomeName').textContent = userData.name || '尊贵的车主';
             }
             
-            // 加载默认页面
-            loadCustomerPage('my-cars');
+            // 显示欢迎卡片，隐藏内容容器（初始状态）
+            document.getElementById('welcomeCard').style.display = 'block';
+            document.getElementById('customerContent').style.display = 'none';
             
         } catch (error) {
             console.error('加载用户信息失败:', error);
-            showError('加载用户信息失败');
         }
     } else {
-        // 未登录，跳转到登录页
-        console.log('No user, redirecting to login');
         window.location.href = 'index.html';
     }
+});
+
+// 修改菜单点击逻辑
+document.querySelectorAll('.profile-menu li').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.profile-menu li').forEach(li => li.classList.remove('active'));
+        item.classList.add('active');
+        currentPage = item.dataset.page;
+        
+        // 隐藏欢迎卡片，显示内容容器
+        document.getElementById('welcomeCard').style.display = 'none';
+        document.getElementById('customerContent').style.display = 'block';
+        
+        if (currentUser) {
+            loadCustomerPage(currentPage);
+        }
+    });
 });
 
 // 菜单点击
