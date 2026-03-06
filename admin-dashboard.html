@@ -79,6 +79,27 @@
             </div>
         </div>
     </div>
+    <div class="modal" id="demoteModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 id="demoteModalTitle">移除管理员</h3>
+            <span class="close" onclick="closeDemoteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>确定要将 <strong id="demoteUserName"></strong> 的管理员权限移除吗？</p>
+            <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> 移除后该用户将成为普通车主。</p>
+            
+            <div class="form-group" style="margin-top: 20px;">
+                <label>请输入管理员密码确认操作：</label>
+                <input type="password" id="demotePassword" class="form-control" placeholder="请输入管理员密码">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="confirmDemote()">确认移除</button>
+            <button class="btn btn-secondary" onclick="closeDemoteModal()">取消</button>
+        </div>
+    </div>
+</div>
 
     <!-- 注意：只在这里引入一次 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
