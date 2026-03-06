@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车服务管理系统 - 登录注册</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧品牌展示区 -->
+        <div class="brand-side">
+            <div class="brand-content">
+                <div class="brand-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <h1 class="brand-title">汽车服务管理系统</h1>
+                <p class="brand-description">
+                    专业的汽车服务管理平台，为车主和商家提供便捷的服务管理体验。
+                </p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>车辆信息管理</li>
+                    <li><i class="fas fa-check"></i>预约服务系统</li>
+                    <li><i class="fas fa-check"></i>服务记录追踪</li>
+                    <li><i class="fas fa-check"></i>在线支付管理</li>
+                    <li><i class="fas fa-check"></i>数据统计分析</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 右侧表单区 -->
+        <div class="form-side" id="formSide">
+            <!-- 登录表单 -->
+            <div id="loginForm" class="fade-enter">
+                <div class="form-header">
+                    <h2>欢迎回来</h2>
+                    <p>还没有账号？ <a href="#" onclick="showRegister()">立即注册</a></p>
+                </div>
+
+                <!-- 角色选择 -->
+                <div class="role-selector">
+                    <div class="role-option active" onclick="selectRole('customer')" id="customerRole">
+                        <i class="fas fa-user"></i>
+                        <span>车主</span>
+                    </div>
+                    <div class="role-option" onclick="selectRole('admin')" id="adminRole">
+                        <i class="fas fa-user-tie"></i>
+                        <span>管理员</span>
+                    </div>
+                </div>
+
+                <div id="loginError" class="error-message" style="display: none;"></div>
+
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="loginEmail" placeholder="请输入邮箱" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword')"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <label class="remember-me">
+                            <input type="checkbox" id="rememberMe"> 记住我
+                        </label>
+                        <a href="#" class="forgot-password" onclick="showForgotPassword()">忘记密码？</a>
+                    </div>
+
+                    <button type="submit" class="btn" id="loginBtn">登录</button>
+                </form>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="registerForm" style="display: none;" class="fade-enter">
+                <div class="form-header">
+                    <h2>创建账号</h2>
+                    <p>已有账号？ <a href="#" onclick="showLogin()">立即登录</a></p>
+                </div>
+
+                <div class="role-selector">
+                    <div class="role-option active" onclick="selectRegisterRole('customer')" id="registerCustomerRole">
+                        <i class="fas fa-user"></i>
+                        <span>车主</span>
+                    </div>
+                    <div class="role-option" onclick="selectRegisterRole('admin')" id="registerAdminRole">
+                        <i class="fas fa-user-tie"></i>
+                        <span>管理员</span>
+                    </div>
+                </div>
+
+                <div id="registerError" class="error-message" style="display: none;"></div>
+
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <div class="input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="registerName" placeholder="请输入用户名" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="registerEmail" placeholder="请输入邮箱" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="registerPassword" placeholder="请输入密码" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>确认密码</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="registerConfirmPassword" placeholder="请再次输入密码" required>
+                        </div>
+                    </div>
+
+                    <div id="adminInviteField" style="display: none;">
+                        <div class="form-group">
+                            <label>管理员邀请码</label>
+                            <input type="text" id="inviteCode" placeholder="请输入邀请码">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="registerBtn">注册</button>
+                </form>
+            </div>
+
+            <!-- 忘记密码表单 -->
+            <div id="forgotPasswordForm" style="display: none;" class="fade-enter">
+                <div class="form-header">
+                    <h2>重置密码</h2>
+                    <p><a href="#" onclick="showLogin()">返回登录</a></p>
+                </div>
+
+                <div id="resetError" class="error-message" style="display: none;"></div>
+                <div id="resetSuccess" class="success-message" style="display: none;"></div>
+
+                <form onsubmit="handleResetPassword(event)">
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="resetEmail" placeholder="请输入注册邮箱" required>
+                    </div>
+                    <button type="submit" class="btn">发送重置邮件</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入脚本 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

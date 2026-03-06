@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员仪表板 - 汽车服务管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-car"></i> CarService Pro</h2>
+                <p>管理员面板</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" data-page="dashboard">
+                    <i class="fas fa-dashboard"></i> 仪表板
+                </li>
+                <li data-page="cars">
+                    <i class="fas fa-car"></i> 汽车管理
+                </li>
+                <li data-page="appointments">
+                    <i class="fas fa-calendar-check"></i> 预约管理
+                </li>
+                <li data-page="services">
+                    <i class="fas fa-tools"></i> 服务记录
+                </li>
+                <li data-page="payments">
+                    <i class="fas fa-credit-card"></i> 支付记录
+                </li>
+                <li data-page="reports">
+                    <i class="fas fa-chart-bar"></i> 数据报表
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="top-bar">
+                <span class="page-title" id="pageTitle">仪表板</span>
+                <div class="user-info">
+                    <span class="user-name" id="userName">加载中...</span>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> 退出
+                    </button>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="pageContent"></div>
+        </div>
+    </div>
+
+    <!-- 脚本 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin/admin.js"></script>
+    <script src="js/admin/cars.js"></script>
+    <script src="js/admin/appointments.js"></script>
+    <script src="js/admin/services.js"></script>
+    <script src="js/admin/payments.js"></script>
+    <script src="js/admin/reports.js"></script>
+</body>
+</html>
