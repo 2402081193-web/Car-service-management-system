@@ -7,6 +7,102 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/login.css">
+    <style>
+        /* 登录方式切换样式 */
+        .login-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+        
+        .login-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            color: #64748b;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .login-tab:hover {
+            color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .login-tab.active {
+            color: #3b82f6;
+            border-bottom: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+        
+        .login-tab i {
+            margin-right: 8px;
+        }
+        
+        /* 输入框图标调整 */
+        .input-group .prefix-icon {
+            position: absolute;
+            left: 15px;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        
+        .input-group .suffix-icon {
+            position: absolute;
+            right: 15px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        
+        /* 手机号输入提示 */
+        .phone-hint {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 5px;
+            margin-left: 10px;
+        }
+        
+        .phone-hint i {
+            color: #3b82f6;
+            margin-right: 5px;
+        }
+        
+        /* 验证码输入框 */
+        .verification-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .verification-row .form-group {
+            flex: 1;
+        }
+        
+        .verification-row button {
+            width: 120px;
+            white-space: nowrap;
+        }
+        
+        .send-code-btn {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            height: 42px;
+            margin-top: 22px;
+        }
+        
+        .send-code-btn:hover {
+            background: #bfdbfe;
+        }
+        
+        .send-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
@@ -19,15 +115,33 @@
             
             <div id="loginError" class="alert alert-danger" style="display: none;"></div>
             
-            <form id="loginForm">
+            <!-- 登录方式切换 -->
+            <div class="login-tabs">
+                <div class="login-tab active" onclick="switchLoginMethod('password')" id="tabPassword">
+                    <i class="fas fa-lock"></i> 密码登录
+                </div>
+                <div class="login-tab" onclick="switchLoginMethod('phone')" id="tabPhone">
+                    <i class="fas fa-mobile-alt"></i> 手机号登录
+                </div>
+            </div>
+            
+            <!-- 密码登录表单 -->
+            <form id="passwordLoginForm" style="display: block;">
                 <div class="form-group">
-                    <label>邮箱</label>
-                    <input type="email" id="email" class="form-control" placeholder="请输入邮箱" required>
+                    <label>邮箱 / 手机号</label>
+                    <div class="input-group">
+                        <i class="fas fa-user prefix-icon"></i>
+                        <input type="text" id="loginAccount" class="form-control" placeholder="请输入邮箱或手机号" required>
+                    </div>
                 </div>
                 
                 <div class="form-group">
                     <label>密码</label>
-                    <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
+                    <div class="input-group">
+                        <i class="fas fa-lock prefix-icon"></i>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="请输入密码" required>
+                        <i class="fas fa-eye suffix-icon" onclick="togglePassword('loginPassword')"></i>
+                    </div>
                 </div>
                 
                 <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
@@ -37,7 +151,40 @@
                     <a href="#" class="forgot-link" onclick="showForgotPassword()">忘记密码？</a>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">登录</button>
+                <button type="submit" class="btn btn-primary btn-block" id="passwordLoginBtn">登录</button>
+            </form>
+            
+            <!-- 手机号登录表单 -->
+            <form id="phoneLoginForm" style="display: none;">
+                <div class="form-group">
+                    <label>手机号</label>
+                    <div class="input-group">
+                        <i class="fas fa-mobile-alt prefix-icon"></i>
+                        <input type="tel" id="loginPhone" class="form-control" placeholder="请输入手机号" pattern="[0-9]{11}" maxlength="11">
+                    </div>
+                    <div class="phone-hint">
+                        <i class="fas fa-info-circle"></i> 请输入11位手机号
+                    </div>
+                </div>
+                
+                <div class="verification-row">
+                    <div class="form-group">
+                        <label>验证码</label>
+                        <div class="input-group">
+                            <i class="fas fa-key prefix-icon"></i>
+                            <input type="text" id="smsCode" class="form-control" placeholder="请输入验证码" maxlength="6">
+                        </div>
+                    </div>
+                    <button type="button" class="btn send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">获取验证码</button>
+                </div>
+                
+                <div class="form-group" style="margin-top: 10px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberPhone"> 记住我
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="phoneLoginBtn">手机号登录</button>
             </form>
             
             <div class="login-footer">
@@ -71,87 +218,258 @@
     <script src="../js/firebase-config.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        
-        loginForm.addEventListener('submit', async (e) => {
+        // 当前登录方式
+        let currentLoginMethod = 'password';
+        let countdown = 60;
+        let timer = null;
+
+        // 切换登录方式
+        window.switchLoginMethod = function(method) {
+            currentLoginMethod = method;
+            
+            // 更新标签样式
+            document.getElementById('tabPassword').classList.toggle('active', method === 'password');
+            document.getElementById('tabPhone').classList.toggle('active', method === 'phone');
+            
+            // 切换表单显示
+            document.getElementById('passwordLoginForm').style.display = method === 'password' ? 'block' : 'none';
+            document.getElementById('phoneLoginForm').style.display = method === 'phone' ? 'block' : 'none';
+            
+            // 清空错误信息
+            document.getElementById('loginError').style.display = 'none';
+        };
+
+        // 密码登录
+        document.getElementById('passwordLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const account = document.getElementById('loginAccount').value.trim();
+            const password = document.getElementById('loginPassword').value;
             const remember = document.getElementById('remember').checked;
             
-            loginBtn.innerHTML = '<span class="spinner"></span> 登录中...';
-            loginBtn.disabled = true;
+            if (!account || !password) {
+                showError('请输入账号和密码');
+                return;
+            }
+            
+            const btn = document.getElementById('passwordLoginBtn');
+            btn.innerHTML = '<span class="spinner"></span> 登录中...';
+            btn.disabled = true;
             
             try {
-                // 设置持久化
-                if (remember) {
-                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                let user = null;
+                
+                // 判断是邮箱还是手机号
+                if (account.includes('@')) {
+                    // 邮箱登录
+                    const userCredential = await auth.signInWithEmailAndPassword(account, password);
+                    user = userCredential.user;
                 } else {
-                    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+                    // 手机号登录 - 需要先通过手机号查找对应的邮箱
+                    const userSnapshot = await db.collection('users')
+                        .where('phone', '==', account)
+                        .limit(1)
+                        .get();
+                    
+                    if (userSnapshot.empty) {
+                        throw new Error('手机号未注册');
+                    }
+                    
+                    const userData = userSnapshot.docs[0].data();
+                    const userCredential = await auth.signInWithEmailAndPassword(userData.email, password);
+                    user = userCredential.user;
                 }
                 
-                // 登录
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // 检查用户角色
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                
-                if (!userDoc.exists) {
-                    throw new Error('用户数据不存在');
-                }
-                
-                const userData = userDoc.data();
-                
-                if (userData.role !== 'customer') {
-                    await auth.signOut();
-                    throw new Error('此账号不是车主账号');
-                }
-                
-                // 更新最后登录时间
-                await db.collection('users').doc(user.uid).update({
-                    lastLogin: new Date().toISOString()
-                });
-                
-                // 跳转到客户仪表板
-                window.location.href = '../customer-dashboard.html';
+                await handleLoginSuccess(user, remember);
                 
             } catch (error) {
                 console.error('Login error:', error);
-                
-                let errorMessage = '登录失败';
-                switch(error.code) {
-                    case 'auth/user-not-found':
-                        errorMessage = '用户不存在';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMessage = '密码错误';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = '邮箱格式不正确';
-                        break;
-                    default:
-                        errorMessage = error.message;
-                }
-                
-                document.getElementById('loginError').innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
-                document.getElementById('loginError').style.display = 'flex';
-                
-                loginBtn.innerHTML = '登录';
-                loginBtn.disabled = false;
+                handleLoginError(error);
+            } finally {
+                btn.innerHTML = '登录';
+                btn.disabled = false;
             }
         });
-        
-        function showForgotPassword() {
+
+        // 手机号登录表单提交
+        document.getElementById('phoneLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('loginPhone').value.trim();
+            const smsCode = document.getElementById('smsCode').value.trim();
+            const remember = document.getElementById('rememberPhone').checked;
+            
+            if (!phone || !smsCode) {
+                showError('请输入手机号和验证码');
+                return;
+            }
+            
+            if (!/^\d{11}$/.test(phone)) {
+                showError('请输入11位有效手机号');
+                return;
+            }
+            
+            const btn = document.getElementById('phoneLoginBtn');
+            btn.innerHTML = '<span class="spinner"></span> 登录中...';
+            btn.disabled = true;
+            
+            try {
+                // 验证验证码（这里需要集成短信服务）
+                // 这里简化处理，实际应该调用后端验证
+                if (smsCode !== '123456') { // 示例验证码
+                    throw new Error('验证码错误');
+                }
+                
+                // 通过手机号查找用户
+                const userSnapshot = await db.collection('users')
+                    .where('phone', '==', phone)
+                    .limit(1)
+                    .get();
+                
+                if (userSnapshot.empty) {
+                    throw new Error('手机号未注册');
+                }
+                
+                const userData = userSnapshot.docs[0].data();
+                
+                // 这里需要特殊处理：手机号登录实际上需要创建自定义token
+                // 为了简化，我们直接使用邮箱密码登录（需要用户知道密码）
+                // 或者使用 Firebase Phone Auth
+                alert('手机号登录功能需要配置 Firebase Phone Auth，目前使用邮箱密码登录代替');
+                
+                // 跳转到登录页面
+                document.getElementById('loginAccount').value = userData.email;
+                switchLoginMethod('password');
+                
+            } catch (error) {
+                console.error('Phone login error:', error);
+                showError(error.message);
+            } finally {
+                btn.innerHTML = '手机号登录';
+                btn.disabled = false;
+            }
+        });
+
+        // 发送验证码
+        window.sendVerificationCode = function() {
+            const phone = document.getElementById('loginPhone').value.trim();
+            
+            if (!phone || !/^\d{11}$/.test(phone)) {
+                showError('请输入11位有效手机号');
+                return;
+            }
+            
+            // 开始倒计时
+            const btn = document.getElementById('sendCodeBtn');
+            btn.disabled = true;
+            
+            timer = setInterval(() => {
+                countdown--;
+                btn.textContent = `${countdown}秒后重发`;
+                
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                    countdown = 60;
+                }
+            }, 1000);
+            
+            // 这里应该调用真实的短信发送API
+            alert(`验证码已发送到手机 ${phone} (测试验证码: 123456)`);
+        };
+
+        // 处理登录成功
+        async function handleLoginSuccess(user, remember) {
+            // 设置持久化
+            if (remember) {
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+            }
+            
+            // 检查用户角色
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            
+            if (!userDoc.exists) {
+                throw new Error('用户数据不存在');
+            }
+            
+            const userData = userDoc.data();
+            
+            if (userData.role !== 'customer') {
+                await auth.signOut();
+                throw new Error('此账号不是车主账号');
+            }
+            
+            // 更新最后登录时间
+            await db.collection('users').doc(user.uid).update({
+                lastLogin: new Date().toISOString()
+            });
+            
+            // 跳转到客户仪表板
+            window.location.href = '../customer-dashboard.html';
+        }
+
+        // 处理登录错误
+        function handleLoginError(error) {
+            let errorMessage = '登录失败';
+            
+            switch(error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = '用户不存在';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = '密码错误';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = '邮箱格式不正确';
+                    break;
+                case 'auth/invalid-login-credentials':
+                    errorMessage = '账号或密码错误';
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            
+            showError(errorMessage);
+        }
+
+        // 显示错误
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            errorDiv.style.display = 'flex';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // 切换密码显示
+        window.togglePassword = function(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
+
+        // 忘记密码
+        window.showForgotPassword = function() {
             document.getElementById('forgotModal').classList.add('show');
-        }
-        
-        function closeForgotModal() {
+        };
+
+        window.closeForgotModal = function() {
             document.getElementById('forgotModal').classList.remove('show');
-        }
-        
+        };
+
+        // 重置密码表单提交
         document.getElementById('resetForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -177,6 +495,11 @@
                 document.getElementById('resetError').innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
                 document.getElementById('resetError').style.display = 'flex';
             }
+        });
+
+        // 手机号输入限制
+        document.getElementById('loginPhone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^\d]/g, '').slice(0, 11);
         });
     </script>
 </body>
