@@ -1242,3 +1242,13 @@ code {
         min-width: 100%;
     }
 }
+
+/* 强制侧边栏显示 */
+@media (max-width: 768px) {
+    .sidebar.open {
+        transform: translateX(0) !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
