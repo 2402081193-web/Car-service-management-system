@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理员仪表板 - 汽车服务管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
 </head>
 <body>
     <div class="admin-container">
@@ -23,7 +24,7 @@
                 <li data-page="cars">
                     <i class="fas fa-car"></i> 汽车管理
                 </li>
-                 <li data-page="appointments">
+                <li data-page="appointments">
                     <i class="fas fa-calendar-check"></i> 预约管理
                 </li>
                 <li data-page="services">
@@ -47,23 +48,42 @@
                 <span class="page-title" id="pageTitle">仪表板</span>
                 <div class="user-info">
                     <span class="user-name" id="userName">加载中...</span>
-                    <button class="logout-btn" onclick="logout()">
+                    <button class="btn btn-danger btn-sm" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i> 退出
                     </button>
                 </div>
             </div>
 
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
             <div id="pageContent"></div>
         </div>
     </div>
 
-    <!-- 脚本 -->
+    <!-- 提升管理员模态框 -->
+    <div class="modal" id="promoteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>提升为管理员</h3>
+                <span class="close" onclick="closePromoteModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>请输入管理员注册密码以确认操作：</p>
+                <input type="password" id="promotePassword" class="form-control" placeholder="请输入管理员密码">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="confirmPromote()">确认</button>
+                <button class="btn btn-secondary" onclick="closePromoteModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注意：只在这里引入一次 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- 引入自定义脚本 -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin/admin.js"></script>
@@ -73,9 +93,5 @@
     <script src="js/admin/payments.js"></script>
     <script src="js/admin/reports.js"></script>
     <script src="js/admin/users.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
