@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员注册 - 汽车服务管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="fas fa-user-tie"></i>
+                <h1>管理员注册</h1>
+                <p>已有账号？ <a href="login.html">立即登录</a></p>
+            </div>
+            
+            <div id="registerError" class="error-message" style="display: none;"></div>
+            
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <span>管理员注册需要输入注册密码，请联系系统管理员获取</span>
+            </div>
+            
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label>管理员注册密码 <span style="color: red;">*</span></label>
+                    <div class="input-group">
+                        <i class="fas fa-key"></i>
+                        <input type="password" id="adminPassword" placeholder="请输入管理员注册密码" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('adminPassword')"></i>
+                    </div>
+                    <div class="password-hint">默认密码: ADMIN2024</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>用户名</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="name" placeholder="请输入用户名" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" placeholder="请输入邮箱" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>手机号</label>
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone" placeholder="请输入手机号">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="请输入密码" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                    </div>
+                    <div class="password-hint">密码长度至少6位</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>确认密码</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmPassword" placeholder="请再次输入密码" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn" id="registerBtn">注册</button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="../index.html" style="color: #667eea; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i> 返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/auth-helper.js"></script>
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+        
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const adminPassword = document.getElementById('adminPassword').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // 验证管理员注册密码
+            if (adminPassword !== ADMIN_REGISTER_PASSWORD) {
+                showError('registerError', '管理员注册密码错误');
+                return;
+            }
+            
+            // 验证邮箱
+            if (!validateEmail(email)) {
+                showError('registerError', '请输入有效的邮箱');
+                return;
+            }
+            
+            // 验证密码
+            if (!validatePassword(password)) {
+                showError('registerError', '密码长度至少6位');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('registerError', '两次输入的密码不一致');
+                return;
+            }
+            
+            registerBtn.innerHTML = '<span class="loading-spinner"></span> 注册中...';
+            registerBtn.disabled = true;
+            
+            try {
+                // 创建用户
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // 更新用户资料
+                await user.updateProfile({
+                    displayName: name
+                });
+                
+                // 保存用户信息到数据库
+                await db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    phone: phone || '',
+                    role: 'admin',
+                    status: 'active',
+                    createdBy: 'admin_registration',
+                    createdAt: new Date().toISOString()
+                });
+                
+                // 跳转到管理员仪表板
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                
+                let errorMessage = '注册失败';
+                switch(error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = '邮箱已被注册';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = '邮箱格式不正确';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = '密码强度太弱';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                showError('registerError', errorMessage);
+                
+                registerBtn.innerHTML = '注册';
+                registerBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
