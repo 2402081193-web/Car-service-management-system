@@ -11,11 +11,14 @@
 </head>
 <body>
     <div class="admin-container">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
+        <!-- 侧边栏 - 添加ID和关闭按钮 -->
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2><i class="fas fa-car"></i> CarService Pro</h2>
-                <p>管理员面板</p>
+                <!-- 添加关闭按钮（移动端显示） -->
+                <button class="close-sidebar" onclick="closeSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <ul class="sidebar-menu">
                 <li class="active" data-page="dashboard">
@@ -49,9 +52,14 @@
         <div class="main-content">
             <div class="top-bar">
                 <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+                    <!-- 添加移动端菜单按钮 -->
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
                     <span class="page-title" id="pageTitle">仪表板</span>
                     
-                    <!-- 搜索框 - 新增 -->
+                    <!-- 搜索框 -->
                     <div class="search-container" style="flex: 1; max-width: 400px;">
                         <div class="search-box">
                             <i class="fas fa-search search-icon"></i>
@@ -69,6 +77,9 @@
                     </button>
                 </div>
             </div>
+
+            <!-- 添加移动端遮罩层 -->
+            <div class="mobile-overlay" onclick="closeSidebar()"></div>
 
             <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
             <div id="pageContent"></div>
@@ -150,6 +161,73 @@
     <script src="js/admin/reports.js"></script>
     <script src="js/admin/users.js"></script>
     <script src="js/admin/settings.js"></script>
-    <script src="js/admin/search.js"></script>  <!-- 新增搜索模块 -->
-    </body>
+    <script src="js/admin/search.js"></script>
+
+    <!-- 添加侧边栏控制函数 -->
+    <script>
+        // 侧边栏控制函数
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+            
+            if (overlay) {
+                overlay.classList.toggle('show');
+            }
+            
+            // 禁止body滚动
+            if (sidebar && sidebar.classList.contains('open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            
+            if (sidebar) {
+                sidebar.classList.remove('open');
+            }
+            
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            
+            document.body.style.overflow = '';
+        }
+
+        // 监听窗口大小变化，自动关闭侧边栏
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.querySelector('.mobile-overlay');
+                
+                if (sidebar) {
+                    sidebar.classList.remove('open');
+                }
+                
+                if (overlay) {
+                    overlay.classList.remove('show');
+                }
+                
+                document.body.style.overflow = '';
+            }
+        });
+
+        // 点击菜单项后自动关闭侧边栏（移动端）
+        document.addEventListener('click', (e) => {
+            const menuItem = e.target.closest('.sidebar-menu li');
+            if (menuItem && window.innerWidth <= 768) {
+                setTimeout(() => {
+                    closeSidebar();
+                }, 300);
+            }
+        });
+    </script>
+</body>
 </html>
