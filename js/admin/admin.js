@@ -132,6 +132,14 @@ function loadPage(page) {
                 showError('用户管理模块加载失败');
             }
             break;
+        case 'settings':
+            if (typeof loadSettingsPage === 'function') {
+                loadSettingsPage();
+            } else {
+                console.error('loadSettingsPage not defined');
+                showError('系统设置模块加载失败');
+            }
+            break;
         default:
             console.warn('Unknown page:', page);
             loadDashboard();
