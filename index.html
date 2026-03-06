@@ -239,10 +239,6 @@
                 <div class="login-tab active" onclick="switchLoginMethod('password')" id="tabPassword">
                     <i class="fas fa-lock"></i> 密码登录
                 </div>
-                <div class="login-tab" onclick="switchLoginMethod('phone')" id="tabPhone">
-                    <i class="fas fa-mobile-alt"></i> 手机号登录
-                </div>
-            </div>
             
             <!-- 密码登录表单 -->
             <form id="passwordLoginForm" style="display: block;">
@@ -275,74 +271,6 @@
                 <button type="submit" class="btn btn-primary btn-block" id="passwordLoginBtn">登录</button>
             </form>
             
-            <!-- 手机号登录表单 -->
-            <form id="phoneLoginForm" style="display: none;">
-                <div class="form-group">
-                    <label>手机号</label>
-                    <div class="input-group">
-                        <i class="fas fa-mobile-alt prefix-icon"></i>
-                        <input type="tel" id="loginPhone" class="form-control" placeholder="请输入11位手机号" pattern="[0-9]{11}" maxlength="11">
-                    </div>
-                    <div class="phone-hint">
-                        <i class="fas fa-info-circle"></i> 请输入11位手机号
-                    </div>
-                    <div id="phoneRoleHint" style="margin-top: 5px;"></div>
-                </div>
-                
-                <div class="verification-row">
-                    <div class="form-group">
-                        <label>验证码</label>
-                        <div class="input-group">
-                            <i class="fas fa-key prefix-icon"></i>
-                            <input type="text" id="smsCode" class="form-control" placeholder="请输入6位验证码" maxlength="6">
-                        </div>
-                    </div>
-                    <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">获取验证码</button>
-                </div>
-                
-                <div class="form-group" style="margin-top: 10px;">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="rememberPhone"> 记住我
-                    </label>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block" id="phoneLoginBtn">手机号登录</button>
-            </form>
-            
-            <div class="register-link">
-                <span>还没有账号？</span>
-                <a href="#" onclick="showRegisterOptions()">立即注册</a>
-            </div>
-            
-            <div class="back-home">
-                <a href="index.html"><i class="fas fa-arrow-left"></i> 返回首页</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 注册选项模态框 -->
-    <div class="modal" id="registerModal">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3>选择注册身份</h3>
-                <span class="close" onclick="closeRegisterModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p style="margin-bottom: 20px; color: #64748b;">请选择您要注册的身份：</p>
-                
-                <div style="display: flex; gap: 15px; justify-content: center;">
-                    <div class="role-option" onclick="redirectToRegister('customer')" style="max-width: none; flex: 1; padding: 20px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #667eea;"></i>
-                        <span style="display: block; margin-top: 10px; font-weight: 600;">车主注册</span>
-                    </div>
-                    <div class="role-option" onclick="redirectToRegister('admin')" style="max-width: none; flex: 1; padding: 20px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer;">
-                        <i class="fas fa-user-tie" style="font-size: 2rem; color: #667eea;"></i>
-                        <span style="display: block; margin-top: 10px; font-weight: 600;">管理员注册</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- 忘记密码模态框 -->
     <div class="modal" id="forgotModal">
@@ -389,17 +317,12 @@
             document.getElementById('loadingOverlay').classList.remove('show');
         }
 
-        // 切换登录方式
-        window.switchLoginMethod = function(method) {
-            currentLoginMethod = method;
             
             // 更新标签样式
             document.getElementById('tabPassword').classList.toggle('active', method === 'password');
-            document.getElementById('tabPhone').classList.toggle('active', method === 'phone');
             
             // 切换表单显示
             document.getElementById('passwordLoginForm').style.display = method === 'password' ? 'block' : 'none';
-            document.getElementById('phoneLoginForm').style.display = method === 'phone' ? 'block' : 'none';
             
             // 清空错误信息
             document.getElementById('loginError').style.display = 'none';
@@ -408,11 +331,6 @@
         // 实时检查账号角色（密码登录）
         document.getElementById('loginAccount').addEventListener('input', function(e) {
             const account = e.target.value.trim();
-            
-            // 清除之前的定时器
-            if (accountCheckTimer) {
-                clearTimeout(accountCheckTimer);
-            }
             
             if (account.length < 3) {
                 document.getElementById('accountRoleHint').innerHTML = '';
@@ -423,17 +341,6 @@
             accountCheckTimer = setTimeout(async () => {
                 await checkAccountRole(account);
             }, 500);
-        });
-
-        // 实时检查手机号角色（手机号登录）
-        document.getElementById('loginPhone').addEventListener('input', function(e) {
-            const phone = e.target.value.trim();
-            
-            if (phone.length === 11) {
-                checkPhoneRole(phone);
-            } else {
-                document.getElementById('phoneRoleHint').innerHTML = '';
-            }
         });
 
         // 检查账号角色
@@ -543,33 +450,7 @@
                 hideLoading();
             }
         });
-
-        // 手机号登录
-        document.getElementById('phoneLoginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const phone = document.getElementById('loginPhone').value.trim();
-            const smsCode = document.getElementById('smsCode').value.trim();
-            const remember = document.getElementById('rememberPhone').checked;
-            
-            if (!phone || !smsCode) {
-                showError('请输入手机号和验证码');
-                return;
-            }
-            
-            if (!/^\d{11}$/.test(phone)) {
-                showError('请输入11位有效手机号');
-                return;
-            }
-            
-            showLoading();
-            
-            try {
-                // 验证验证码（简化处理，使用固定验证码 123456）
-                if (smsCode !== '123456') {
-                    throw new Error('验证码错误');
-                }
-                
+        
                 // 通过手机号查找用户
                 const userSnapshot = await db.collection('users')
                     .where('phone', '==', phone)
@@ -650,43 +531,6 @@
             showError(errorMessage);
         }
 
-        // 发送验证码
-        window.sendVerificationCode = function() {
-            const phone = document.getElementById('loginPhone').value.trim();
-            
-            if (!phone || !/^\d{11}$/.test(phone)) {
-                showError('请输入11位有效手机号');
-                return;
-            }
-            
-            // 开始倒计时
-            const btn = document.getElementById('sendCodeBtn');
-            btn.disabled = true;
-            
-            timer = setInterval(() => {
-                countdown--;
-                btn.textContent = `${countdown}秒后重发`;
-                
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    btn.disabled = false;
-                    btn.textContent = '获取验证码';
-                    countdown = 60;
-                }
-            }, 1000);
-            
-            // 模拟发送验证码
-            alert(`验证码已发送到手机 ${phone} (测试验证码: 123456)`);
-        };
-
-        // 显示注册选项
-        window.showRegisterOptions = function() {
-            document.getElementById('registerModal').classList.add('show');
-        };
-
-        window.closeRegisterModal = function() {
-            document.getElementById('registerModal').classList.remove('show');
-        };
 
         // 跳转到注册页面
         window.redirectToRegister = function(role) {
