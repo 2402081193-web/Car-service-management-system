@@ -712,3 +712,31 @@ tr:hover {
     gap: 10px;
     justify-content: flex-end;
 }
+
+/* 系统设置样式 */
+.alert-info {
+    background: #e8f4fd;
+    color: #0369a1;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #b8e1ff;
+    margin: 15px 0;
+}
+
+.alert-info i {
+    margin-right: 8px;
+}
+
+code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #d53f8c;
+}
+
+.text-muted {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
