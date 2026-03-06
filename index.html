@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
     <style>
-    
         /* 输入框图标调整 */
         .input-group {
             position: relative;
@@ -59,7 +58,6 @@
             color: #667eea;
             margin-right: 5px;
         }
-        
         
         /* 注册链接 */
         .register-link {
@@ -169,7 +167,7 @@
             <div id="loginError" class="alert alert-danger" style="display: none;"></div>
             
             <!-- 密码登录表单 -->
-            <form id="passwordLoginForm" style="display: block;">
+            <form id="passwordLoginForm">
                 <div class="form-group">
                     <label>账号 <span style="color: #64748b; font-size: 0.85rem;">(邮箱或手机号)</span></label>
                     <div class="input-group">
@@ -199,6 +197,40 @@
                 <button type="submit" class="btn btn-primary btn-block" id="passwordLoginBtn">登录</button>
             </form>
             
+            <div class="register-link">
+                <span>还没有账号？</span>
+                <a href="#" onclick="showRegisterOptions()">立即注册</a>
+            </div>
+            
+            <div class="back-home">
+                <a href="index.html"><i class="fas fa-arrow-left"></i> 返回首页</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册选项模态框 -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>选择注册身份</h3>
+                <span class="close" onclick="closeRegisterModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: #64748b;">请选择您要注册的身份：</p>
+                
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <div class="role-option" onclick="redirectToRegister('customer')" style="max-width: none; flex: 1; padding: 20px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer;">
+                        <i class="fas fa-user" style="font-size: 2rem; color: #667eea;"></i>
+                        <span style="display: block; margin-top: 10px; font-weight: 600;">车主注册</span>
+                    </div>
+                    <div class="role-option" onclick="redirectToRegister('admin')" style="max-width: none; flex: 1; padding: 20px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer;">
+                        <i class="fas fa-user-tie" style="font-size: 2rem; color: #667eea;"></i>
+                        <span style="display: block; margin-top: 10px; font-weight: 600;">管理员注册</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 忘记密码模态框 -->
     <div class="modal" id="forgotModal">
@@ -245,20 +277,14 @@
             document.getElementById('loadingOverlay').classList.remove('show');
         }
 
-            
-            // 更新标签样式
-            document.getElementById('tabPassword').classList.toggle('active', method === 'password');
-            
-            // 切换表单显示
-            document.getElementById('passwordLoginForm').style.display = method === 'password' ? 'block' : 'none';
-            
-            // 清空错误信息
-            document.getElementById('loginError').style.display = 'none';
-        };
-
-        // 实时检查账号角色（密码登录）
+        // 实时检查账号角色
         document.getElementById('loginAccount').addEventListener('input', function(e) {
             const account = e.target.value.trim();
+            
+            // 清除之前的定时器
+            if (accountCheckTimer) {
+                clearTimeout(accountCheckTimer);
+            }
             
             if (account.length < 3) {
                 document.getElementById('accountRoleHint').innerHTML = '';
@@ -304,33 +330,6 @@
             }
         }
 
-        // 检查手机号角色
-        async function checkPhoneRole(phone) {
-            try {
-                const snapshot = await db.collection('users')
-                    .where('phone', '==', phone)
-                    .limit(1)
-                    .get();
-                
-                const hintDiv = document.getElementById('phoneRoleHint');
-                
-                if (snapshot.empty) {
-                    hintDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.85rem;"><i class="fas fa-exclamation-circle"></i> 手机号未注册</span>';
-                } else {
-                    const userData = snapshot.docs[0].data();
-                    const role = userData.role;
-                    
-                    if (role === 'admin') {
-                        hintDiv.innerHTML = '<span class="role-hint admin"><i class="fas fa-user-tie"></i> 管理员账号</span>';
-                    } else {
-                        hintDiv.innerHTML = '<span class="role-hint customer"><i class="fas fa-user"></i> 车主账号</span>';
-                    }
-                }
-            } catch (error) {
-                console.error('检查手机号失败:', error);
-            }
-        }
-
         // 密码登录
         document.getElementById('passwordLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -355,7 +354,7 @@
                     const userCredential = await auth.signInWithEmailAndPassword(account, password);
                     user = userCredential.user;
                 } else {
-                    // 手机号登录
+                    // 手机号登录 - 通过手机号查找对应的邮箱
                     const userSnapshot = await db.collection('users')
                         .where('phone', '==', account)
                         .limit(1)
@@ -375,33 +374,6 @@
             } catch (error) {
                 console.error('Login error:', error);
                 handleLoginError(error);
-                hideLoading();
-            }
-        });
-        
-                // 通过手机号查找用户
-                const userSnapshot = await db.collection('users')
-                    .where('phone', '==', phone)
-                    .limit(1)
-                    .get();
-                
-                if (userSnapshot.empty) {
-                    throw new Error('手机号未注册');
-                }
-                
-                const userData = userSnapshot.docs[0].data();
-                
-                // 这里需要使用 Firebase Phone Auth，但为简化，提示使用密码登录
-                showError('请使用密码登录方式登录');
-                
-                // 自动填充邮箱到密码登录表单
-                document.getElementById('loginAccount').value = userData.email;
-                switchLoginMethod('password');
-                
-            } catch (error) {
-                console.error('Phone login error:', error);
-                showError(error.message);
-            } finally {
                 hideLoading();
             }
         });
@@ -459,6 +431,14 @@
             showError(errorMessage);
         }
 
+        // 显示注册选项
+        window.showRegisterOptions = function() {
+            document.getElementById('registerModal').classList.add('show');
+        };
+
+        window.closeRegisterModal = function() {
+            document.getElementById('registerModal').classList.remove('show');
+        };
 
         // 跳转到注册页面
         window.redirectToRegister = function(role) {
@@ -532,11 +512,6 @@
                 document.getElementById('resetError').innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
                 document.getElementById('resetError').style.display = 'flex';
             }
-        });
-
-        // 手机号输入限制
-        document.getElementById('loginPhone').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^\d]/g, '').slice(0, 11);
         });
 
         // 页面加载时检查URL中是否有hash指示
