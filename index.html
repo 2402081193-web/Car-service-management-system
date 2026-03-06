@@ -8,41 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
     <style>
-        /* 登录方式切换样式 */
-        .login-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 5px;
-        }
-        
-        .login-tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            cursor: pointer;
-            color: #64748b;
-            font-weight: 500;
-            transition: all 0.3s;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .login-tab:hover {
-            color: #3b82f6;
-            background: #f8fafc;
-        }
-        
-        .login-tab.active {
-            color: #3b82f6;
-            border-bottom: 3px solid #3b82f6;
-            font-weight: 600;
-        }
-        
-        .login-tab i {
-            margin-right: 8px;
-        }
-        
+    
         /* 输入框图标调整 */
         .input-group {
             position: relative;
@@ -94,38 +60,6 @@
             margin-right: 5px;
         }
         
-        /* 验证码行 */
-        .verification-row {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .verification-row .form-group {
-            flex: 1;
-        }
-        
-        .send-code-btn {
-            width: 120px;
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #bfdbfe;
-            height: 42px;
-            margin-top: 22px;
-            white-space: nowrap;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .send-code-btn:hover {
-            background: #bfdbfe;
-        }
-        
-        .send-code-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
         
         /* 注册链接 */
         .register-link {
@@ -233,12 +167,6 @@
             </div>
             
             <div id="loginError" class="alert alert-danger" style="display: none;"></div>
-            
-            <!-- 登录方式切换 -->
-            <div class="login-tabs">
-                <div class="login-tab active" onclick="switchLoginMethod('password')" id="tabPassword">
-                    <i class="fas fa-lock"></i> 密码登录
-                </div>
             
             <!-- 密码登录表单 -->
             <form id="passwordLoginForm" style="display: block;">
