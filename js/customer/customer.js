@@ -5,7 +5,36 @@ let currentPage = 'my-cars';
 // 等待 DOM 加载完成
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, waiting for auth...');
+    
+    // 确保欢迎卡片存在
+    ensureWelcomeCard();
 });
+
+// 确保欢迎卡片存在
+function ensureWelcomeCard() {
+    const customerContent = document.getElementById('customerContent');
+    if (!customerContent) return;
+    
+    // 检查是否已有欢迎卡片
+    if (!document.getElementById('welcomeCard')) {
+        const welcomeCard = document.createElement('div');
+        welcomeCard.id = 'welcomeCard';
+        welcomeCard.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);';
+        welcomeCard.innerHTML = `
+            <h2 style="font-size: 2rem; margin-bottom: 15px;">欢迎回来，<span id="welcomeName">尊贵的车主</span></h2>
+            <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 25px;">在这里您可以管理您的爱车、预约服务、查看历史记录等。</p>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-primary" onclick="showBookingModal()" style="padding: 12px 30px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-calendar-plus"></i> 快速预约
+                </button>
+                <button class="btn btn-outline" onclick="loadMyCars()" style="padding: 12px 30px; background: transparent; border: 2px solid white; color: white; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-car"></i> 查看爱车
+                </button>
+            </div>
+        `;
+        customerContent.appendChild(welcomeCard);
+    }
+}
 
 // 监听认证状态变化
 auth.onAuthStateChanged(async (user) => {
@@ -34,12 +63,9 @@ auth.onAuthStateChanged(async (user) => {
                 updateUserInfo(newUser);
             }
             
-            // 默认加载我的爱车
-            loadMyCars();
-            
         } catch (error) {
-            console.error('Error:', error);
-            alert('加载失败: ' + error.message);
+            console.error('Error loading user:', error);
+            showMessage('加载用户信息失败', 'error');
         }
     } else {
         window.location.href = 'index.html';
@@ -62,10 +88,20 @@ function updateUserInfo(userData) {
 }
 
 // 菜单点击
-document.querySelectorAll('.profile-menu li').forEach(item => {
+document.querySelectorAll('.sidebar-menu li').forEach(item => {
     item.addEventListener('click', () => {
-        document.querySelectorAll('.profile-menu li').forEach(li => li.classList.remove('active'));
-        item.classList.add('active');
+        // 移除所有active类
+        document.querySelectorAll('.sidebar-menu li').forEach(li => {
+            li.style.background = '';
+            li.style.color = '#475569';
+            li.style.fontWeight = 'normal';
+        });
+        
+        // 添加active类到当前项
+        item.style.background = '#dbeafe';
+        item.style.color = '#3b82f6';
+        item.style.fontWeight = '500';
+        
         currentPage = item.dataset.page;
         loadCustomerPage(currentPage);
     });
@@ -73,155 +109,81 @@ document.querySelectorAll('.profile-menu li').forEach(item => {
 
 // 加载页面
 function loadCustomerPage(page) {
-    const welcomeCard = document.getElementById('welcomeCard');
     const customerContent = document.getElementById('customerContent');
+    if (!customerContent) return;
     
-    if (welcomeCard) welcomeCard.style.display = 'none';
-    if (customerContent) customerContent.style.display = 'block';
+    // 隐藏欢迎卡片
+    const welcomeCard = document.getElementById('welcomeCard');
+    if (welcomeCard) {
+        welcomeCard.style.display = 'none';
+    }
     
+    // 清空并显示加载状态
+    customerContent.innerHTML = '<div style="text-align: center; padding: 50px;"><div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 15px; color: #64748b;">加载中...</p></div>';
+    
+    // 添加动画样式
+    if (!document.querySelector('#spin-style')) {
+        const style = document.createElement('style');
+        style.id = 'spin-style';
+        style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+    }
+    
+    // 根据页面加载不同模块
     switch(page) {
         case 'my-cars':
-            loadMyCars();
+            if (typeof loadMyCars === 'function') {
+                loadMyCars();
+            }
             break;
         case 'my-appointments':
-            loadMyAppointments();
+            if (typeof loadMyAppointments === 'function') {
+                loadMyAppointments();
+            }
             break;
         case 'my-services':
-            loadMyServices();
+            if (typeof loadMyServices === 'function') {
+                loadMyServices();
+            }
             break;
         case 'my-payments':
-            loadMyPayments();
+            if (typeof loadMyPayments === 'function') {
+                loadMyPayments();
+            }
             break;
     }
 }
 
-// 加载我的爱车
-window.loadMyCars = function() {
-    const container = document.getElementById('customerContent');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2>我的爱车</h2>
-            <button class="btn btn-primary" onclick="showAddCarModal()">
-                <i class="fas fa-plus"></i> 添加爱车
-            </button>
-        </div>
-        <div id="carsList">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>加载中...</p>
-            </div>
-        </div>
+// 显示消息
+function showMessage(text, type = 'success') {
+    const msgDiv = document.createElement('div');
+    msgDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: ${type === 'success' ? '#22c55e' : '#ef4444'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
     `;
+    msgDiv.textContent = text;
+    document.body.appendChild(msgDiv);
     
-    loadCarsList();
-};
-
-// 加载车辆列表
-async function loadCarsList() {
-    const container = document.getElementById('carsList');
-    if (!container || !currentUser) return;
-    
-    try {
-        const snapshot = await db.collection('cars')
-            .where('userId', '==', currentUser.uid)
-            .get();
-        
-        if (snapshot.empty) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-car"></i>
-                    <h3>还没有添加爱车</h3>
-                    <p>点击"添加爱车"按钮开始添加</p>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '<div style="display: grid; gap: 20px;">';
-        
-        snapshot.forEach(doc => {
-            const car = doc.data();
-            html += `
-                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h3 style="color: #3b82f6;">${car.plate}</h3>
-                        <span style="color: #64748b;">${car.model}</span>
-                    </div>
-                    <div style="color: #475569; margin-bottom: 15px;">
-                        ${car.brand ? `<div>品牌: ${car.brand}</div>` : ''}
-                        ${car.color ? `<div>颜色: ${car.color}</div>` : ''}
-                        ${car.notes ? `<div style="margin-top: 10px;">备注: ${car.notes}</div>` : ''}
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" style="flex: 1;" onclick="showBookingModal('${doc.id}')">
-                            预约
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        container.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error:', error);
-        container.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
-    }
+    setTimeout(() => {
+        msgDiv.remove();
+    }, 3000);
 }
 
-// 显示添加车辆模态框
-window.showAddCarModal = function() {
-    document.getElementById('addCarModal').classList.add('show');
-};
-
-window.closeAddCarModal = function() {
-    document.getElementById('addCarModal').classList.remove('show');
-};
-
-// 提交添加车辆
-window.submitAddCar = async function() {
-    const plate = document.getElementById('carPlate')?.value;
-    const model = document.getElementById('carModel')?.value;
-    
-    if (!plate || !model) {
-        alert('请填写车牌号和车型');
-        return;
-    }
-    
-    const carData = {
-        plate: plate,
-        model: model,
-        brand: document.getElementById('carBrand')?.value || '',
-        color: document.getElementById('carColor')?.value || '',
-        notes: document.getElementById('carNotes')?.value || '',
-        userId: currentUser.uid,
-        createdAt: new Date().toISOString()
-    };
-    
-    try {
-        await db.collection('cars').add(carData);
-        alert('添加成功');
-        closeAddCarModal();
-        loadMyCars();
-    } catch (error) {
-        alert('添加失败: ' + error.message);
-    }
-};
-
-// 显示预约模态框
+// 预约模态框
 window.showBookingModal = function(carId) {
     const modal = document.getElementById('bookingModal');
-    const select = document.getElementById('bookingCarId');
+    if (!modal) return;
     
-    if (select && carId) {
-        // 设置默认选中的车辆
-        Array.from(select.options).forEach(option => {
-            if (option.value === carId) option.selected = true;
-        });
-    }
+    // 加载车辆选项
+    loadCarOptions(carId);
     
     // 设置默认日期
     const dateInput = document.getElementById('bookingDate');
@@ -230,12 +192,42 @@ window.showBookingModal = function(carId) {
         dateInput.value = today.toISOString().split('T')[0];
     }
     
-    modal.classList.add('show');
+    modal.style.display = 'flex';
 };
 
 window.closeBookingModal = function() {
-    document.getElementById('bookingModal').classList.remove('show');
+    document.getElementById('bookingModal').style.display = 'none';
 };
+
+// 加载车辆选项
+async function loadCarOptions(selectedId) {
+    const select = document.getElementById('bookingCarId');
+    if (!select || !currentUser) return;
+    
+    select.innerHTML = '<option value="">加载中...</option>';
+    
+    try {
+        const snapshot = await db.collection('cars')
+            .where('userId', '==', currentUser.uid)
+            .get();
+        
+        if (snapshot.empty) {
+            select.innerHTML = '<option value="">暂无车辆，请先添加</option>';
+            return;
+        }
+        
+        select.innerHTML = '<option value="">请选择车辆</option>';
+        
+        snapshot.forEach(doc => {
+            const car = doc.data();
+            const selected = doc.id === selectedId ? 'selected' : '';
+            select.innerHTML += `<option value="${doc.id}" ${selected}>${car.plate} - ${car.model}</option>`;
+        });
+    } catch (error) {
+        console.error('Error loading cars:', error);
+        select.innerHTML = '<option value="">加载失败</option>';
+    }
+}
 
 // 提交预约
 window.submitBooking = async function() {
@@ -243,9 +235,10 @@ window.submitBooking = async function() {
     const serviceType = document.getElementById('bookingServiceType')?.value;
     const date = document.getElementById('bookingDate')?.value;
     const time = document.getElementById('bookingTime')?.value;
+    const notes = document.getElementById('bookingNotes')?.value;
     
     if (!carId || !serviceType || !date || !time) {
-        alert('请填写完整信息');
+        showMessage('请填写完整信息', 'error');
         return;
     }
     
@@ -254,7 +247,7 @@ window.submitBooking = async function() {
         serviceType: serviceType,
         date: date,
         time: time,
-        notes: document.getElementById('bookingNotes')?.value || '',
+        notes: notes || '',
         status: 'pending',
         userId: currentUser.uid,
         createdAt: new Date().toISOString()
@@ -262,24 +255,81 @@ window.submitBooking = async function() {
     
     try {
         await db.collection('appointments').add(appointmentData);
-        alert('预约成功');
+        showMessage('预约成功');
         closeBookingModal();
+        
+        if (currentPage === 'my-appointments') {
+            loadMyAppointments();
+        }
     } catch (error) {
-        alert('预约失败: ' + error.message);
+        console.error('Error booking:', error);
+        showMessage('预约失败: ' + error.message, 'error');
     }
 };
 
-// 其他页面的占位函数
-window.loadMyAppointments = function() {
-    document.getElementById('customerContent').innerHTML = '<div style="text-align: center; padding: 50px;">预约功能开发中...</div>';
+// 添加车辆模态框
+window.showAddCarModal = function() {
+    document.getElementById('addCarModal').style.display = 'flex';
 };
 
-window.loadMyServices = function() {
-    document.getElementById('customerContent').innerHTML = '<div style="text-align: center; padding: 50px;">服务记录功能开发中...</div>';
+window.closeAddCarModal = function() {
+    document.getElementById('addCarModal').style.display = 'none';
 };
 
-window.loadMyPayments = function() {
-    document.getElementById('customerContent').innerHTML = '<div style="text-align: center; padding: 50px;">支付记录功能开发中...</div>';
+// 提交添加车辆
+window.submitAddCar = async function() {
+    const plate = document.getElementById('carPlate')?.value;
+    const model = document.getElementById('carModel')?.value;
+    const brand = document.getElementById('carBrand')?.value;
+    const color = document.getElementById('carColor')?.value;
+    const notes = document.getElementById('carNotes')?.value;
+    
+    if (!plate || !model) {
+        showMessage('请填写车牌号和车型', 'error');
+        return;
+    }
+    
+    // 检查车牌号格式（简单验证）
+    if (plate.length < 5) {
+        showMessage('请输入有效的车牌号', 'error');
+        return;
+    }
+    
+    const carData = {
+        plate: plate.toUpperCase(),
+        model: model,
+        brand: brand || '',
+        color: color || '',
+        notes: notes || '',
+        userId: currentUser.uid,
+        createdAt: new Date().toISOString()
+    };
+    
+    try {
+        // 检查车牌号是否已存在
+        const existingCar = await db.collection('cars')
+            .where('plate', '==', carData.plate)
+            .get();
+        
+        if (!existingCar.empty) {
+            showMessage('该车牌号已存在', 'error');
+            return;
+        }
+        
+        await db.collection('cars').add(carData);
+        showMessage('爱车添加成功');
+        closeAddCarModal();
+        
+        // 清空表单
+        document.getElementById('addCarForm').reset();
+        
+        if (currentPage === 'my-cars') {
+            loadMyCars();
+        }
+    } catch (error) {
+        console.error('Error adding car:', error);
+        showMessage('添加失败: ' + error.message, 'error');
+    }
 };
 
 // 登出
@@ -289,5 +339,6 @@ window.logout = async function() {
         window.location.href = 'index.html';
     } catch (error) {
         console.error('Logout error:', error);
+        showMessage('登出失败', 'error');
     }
 };
