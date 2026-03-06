@@ -5,94 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理员注册 - 汽车服务管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
                 <i class="fas fa-user-tie"></i>
-                <h1>管理员注册</h1>
+                <h2>管理员注册</h2>
                 <p>已有账号？ <a href="login.html">立即登录</a></p>
             </div>
             
-            <div id="registerError" class="error-message" style="display: none;"></div>
+            <div id="registerError" class="alert alert-danger" style="display: none;"></div>
             
-            <div class="info-box">
+            <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                <span>管理员注册需要输入注册密码，请联系系统管理员获取</span>
+                管理员注册需要输入注册密码，请联系系统管理员获取
             </div>
             
-            <form class="auth-form" id="registerForm">
+            <form id="registerForm">
                 <div class="form-group">
                     <label>管理员注册密码 <span style="color: red;">*</span></label>
-                    <div class="input-group">
-                        <i class="fas fa-key"></i>
-                        <input type="password" id="adminPassword" placeholder="请输入管理员注册密码" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword('adminPassword')"></i>
-                    </div>
-                    <div class="password-hint">默认密码: ADMIN2024</div>
+                    <input type="password" id="adminPassword" class="form-control" placeholder="请输入管理员注册密码" required>
+                    <small class="form-text text-muted">默认密码: ADMIN2024</small>
                 </div>
                 
                 <div class="form-group">
                     <label>用户名</label>
-                    <div class="input-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="name" placeholder="请输入用户名" required>
-                    </div>
+                    <input type="text" id="name" class="form-control" placeholder="请输入用户名" required>
                 </div>
                 
                 <div class="form-group">
                     <label>邮箱</label>
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" placeholder="请输入邮箱" required>
-                    </div>
+                    <input type="email" id="email" class="form-control" placeholder="请输入邮箱" required>
                 </div>
                 
                 <div class="form-group">
                     <label>手机号</label>
-                    <div class="input-group">
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="phone" placeholder="请输入手机号">
-                    </div>
+                    <input type="tel" id="phone" class="form-control" placeholder="请输入手机号">
                 </div>
                 
                 <div class="form-group">
                     <label>密码</label>
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="请输入密码" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
-                    </div>
-                    <div class="password-hint">密码长度至少6位</div>
+                    <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
+                    <small class="form-text text-muted">密码长度至少6位</small>
                 </div>
                 
                 <div class="form-group">
                     <label>确认密码</label>
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="confirmPassword" placeholder="请再次输入密码" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
-                    </div>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="请再次输入密码" required>
                 </div>
                 
-                <button type="submit" class="btn" id="registerBtn">注册</button>
+                <button type="submit" class="btn btn-primary btn-block" id="registerBtn">注册</button>
             </form>
             
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="../index.html" style="color: #667eea; text-decoration: none;">
-                    <i class="fas fa-arrow-left"></i> 返回首页
-                </a>
+            <div class="login-footer">
+                <a href="../index.html"><i class="fas fa-arrow-left"></i> 返回首页</a>
             </div>
         </div>
     </div>
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="../js/firebase-config.js"></script>
-    <script src="../js/auth-helper.js"></script>
+    <script src="../js/auth.js"></script>
     <script>
         const registerForm = document.getElementById('registerForm');
         const registerBtn = document.getElementById('registerBtn');
@@ -109,28 +87,25 @@
             
             // 验证管理员注册密码
             if (adminPassword !== ADMIN_REGISTER_PASSWORD) {
-                showError('registerError', '管理员注册密码错误');
-                return;
-            }
-            
-            // 验证邮箱
-            if (!validateEmail(email)) {
-                showError('registerError', '请输入有效的邮箱');
+                document.getElementById('registerError').innerHTML = `<i class="fas fa-exclamation-circle"></i> 管理员注册密码错误`;
+                document.getElementById('registerError').style.display = 'flex';
                 return;
             }
             
             // 验证密码
-            if (!validatePassword(password)) {
-                showError('registerError', '密码长度至少6位');
+            if (password.length < 6) {
+                document.getElementById('registerError').innerHTML = `<i class="fas fa-exclamation-circle"></i> 密码长度至少6位`;
+                document.getElementById('registerError').style.display = 'flex';
                 return;
             }
             
             if (password !== confirmPassword) {
-                showError('registerError', '两次输入的密码不一致');
+                document.getElementById('registerError').innerHTML = `<i class="fas fa-exclamation-circle"></i> 两次输入的密码不一致`;
+                document.getElementById('registerError').style.display = 'flex';
                 return;
             }
             
-            registerBtn.innerHTML = '<span class="loading-spinner"></span> 注册中...';
+            registerBtn.innerHTML = '<span class="spinner"></span> 注册中...';
             registerBtn.disabled = true;
             
             try {
@@ -156,7 +131,7 @@
                 });
                 
                 // 跳转到管理员仪表板
-                window.location.href = 'dashboard.html';
+                window.location.href = '../admin-dashboard.html';
                 
             } catch (error) {
                 console.error('Registration error:', error);
@@ -176,7 +151,8 @@
                         errorMessage = error.message;
                 }
                 
-                showError('registerError', errorMessage);
+                document.getElementById('registerError').innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
+                document.getElementById('registerError').style.display = 'flex';
                 
                 registerBtn.innerHTML = '注册';
                 registerBtn.disabled = false;
