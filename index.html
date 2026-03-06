@@ -7,84 +7,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
-    <style>
-        .role-container {
-            display: flex;
-            gap: 30px;
-            justify-content: center;
-            margin-top: 40px;
-            flex-wrap: wrap;
-        }
-        
-        .role-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            flex: 1;
-            min-width: 250px;
-            max-width: 300px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .role-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
-        }
-        
-        .role-card i {
-            font-size: 4rem;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        
-        .role-card h2 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .role-card p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-        
-        .role-card .btn {
-            width: auto;
-            padding: 10px 30px;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #666;
-        }
-        
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-        
-        .footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .brand-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .brand-section h1 {
-            font-size: 2.5rem;
-            color: #333;
-            margin: 10px 0;
-        }
-    </style>
 </head>
 <body>
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
     <div class="container" style="max-width: 1200px; margin: 50px auto; padding: 0 20px;">
         <div class="brand-section">
             <i class="fas fa-car" style="font-size: 5rem; color: #667eea;"></i>
@@ -93,14 +22,14 @@
         </div>
         
         <div class="role-container">
-            <div class="role-card" onclick="location.href='customer/login.html'">
+            <div class="role-card" onclick="navigateTo('customer')">
                 <i class="fas fa-user"></i>
                 <h2>车主</h2>
                 <p>管理您的爱车、预约服务、查看记录</p>
                 <button class="btn btn-primary">车主登录</button>
             </div>
             
-            <div class="role-card" onclick="location.href='admin/login.html'">
+            <div class="role-card" onclick="navigateTo('admin')">
                 <i class="fas fa-user-tie"></i>
                 <h2>管理员</h2>
                 <p>管理车辆、服务、支付、用户</p>
@@ -110,10 +39,102 @@
         
         <div class="footer">
             <p>还没有账号？ 
-                <a href="customer/register.html">车主注册</a> | 
-                <a href="admin/register.html">管理员注册</a>
+                <a href="#" onclick="navigateTo('customer/register'); return false;">车主注册</a> | 
+                <a href="#" onclick="navigateTo('admin/register'); return false;">管理员注册</a>
             </p>
         </div>
     </div>
+
+    <script>
+        // 显示/隐藏加载动画
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        // 导航函数
+        function navigateTo(path) {
+            showLoading();
+            
+            // 使用 setTimeout 让加载动画显示出来
+            setTimeout(() => {
+                // 根据路径决定跳转
+                if (path === 'admin') {
+                    window.location.href = 'admin/login.html';
+                } else if (path === 'customer') {
+                    window.location.href = 'customer/login.html';
+                } else if (path === 'admin/register') {
+                    window.location.href = 'admin/register.html';
+                } else if (path === 'customer/register') {
+                    window.location.href = 'customer/register.html';
+                } else {
+                    hideLoading();
+                }
+            }, 100);
+        }
+
+        // Hash 路由处理
+        function handleHashRouting() {
+            // 获取 hash 值，去掉 # 号
+            const hash = window.location.hash.slice(1).toLowerCase();
+            
+            console.log('Current hash:', hash);
+            
+            if (!hash) {
+                return; // 没有 hash，停留在首页
+            }
+            
+            // 显示加载动画
+            showLoading();
+            
+            // 根据 hash 值导航
+            setTimeout(() => {
+                switch(hash) {
+                    case 'admin':
+                    case 'admin/login':
+                        window.location.href = 'admin/login.html';
+                        break;
+                    case 'customer':
+                    case 'customer/login':
+                        window.location.href = 'customer/login.html';
+                        break;
+                    case 'admin/register':
+                        window.location.href = 'admin/register.html';
+                        break;
+                    case 'customer/register':
+                        window.location.href = 'customer/register.html';
+                        break;
+                    case 'admin/dashboard':
+                        window.location.href = 'admin-dashboard.html';
+                        break;
+                    case 'customer/dashboard':
+                        window.location.href = 'customer-dashboard.html';
+                        break;
+                    default:
+                        console.log('Unknown hash:', hash);
+                        hideLoading();
+                }
+            }, 100);
+        }
+
+        // 监听 hash 变化
+        window.addEventListener('hashchange', handleHashRouting);
+        
+        // 页面加载时检查 hash
+        window.addEventListener('DOMContentLoaded', () => {
+            handleHashRouting();
+        });
+
+        // 防止链接默认行为
+        document.querySelectorAll('a[href="#"]').forEach(link => {
+            link.addEventListener('click', (e) => e.preventDefault());
+        });
+
+        // 导出函数到全局
+        window.navigateTo = navigateTo;
+    </script>
 </body>
 </html>
