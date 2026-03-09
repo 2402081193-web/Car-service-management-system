@@ -1,9 +1,23 @@
-// 在 auth.js 中添加角色验证
+// 认证相关功能
+
+// 登出函数
+window.logout = async function() {
+    try {
+        await auth.signOut();
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        alert('登出失败: ' + error.message);
+    }
+};
+
+// 检查登录状态
 auth.onAuthStateChanged((user) => {
     const currentPath = window.location.pathname.split('/').pop();
     
     if (user) {
-        // 获取用户角色
+        console.log('User logged in:', user.email);
+        
         db.collection('users').doc(user.uid).get().then((doc) => {
             if (doc.exists) {
                 const userData = doc.data();
@@ -18,13 +32,40 @@ auth.onAuthStateChanged((user) => {
                     window.location.href = 'admin-dashboard.html';
                 }
             }
+        }).catch(error => {
+            console.error('Error getting user data:', error);
         });
     } else {
+        console.log('No user logged in');
+        
         // 如果在受保护的页面且未登录，跳转到首页
-        if (currentPath !== 'index.html' && 
-            !currentPath.includes('login.html') && 
-            !currentPath.includes('register.html')) {
+        const protectedPages = ['admin-dashboard.html', 'customer-dashboard.html'];
+        if (protectedPages.includes(currentPath)) {
             window.location.href = 'index.html';
         }
     }
 });
+
+// 显示错误消息
+window.showError = function(message) {
+    const toast = document.createElement('div');
+    toast.className = 'error-toast';
+    toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+};
+
+// 显示成功消息
+window.showSuccess = function(message) {
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+};
