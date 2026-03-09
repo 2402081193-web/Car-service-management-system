@@ -69,15 +69,13 @@ function loadCarsPage() {
         
         const carData = {
             plate: document.getElementById('plate').value,
-            owner: document.getElementById('owner').value,  // 使用 owner 字段
+            owner: document.getElementById('owner').value,
             model: document.getElementById('model').value,
             brand: document.getElementById('brand').value || '',
             color: document.getElementById('color').value || '',
             phone: document.getElementById('phone').value || '',
             notes: document.getElementById('notes').value || '',
             createdAt: new Date().toISOString(),  // 使用普通日期字符串
-            // 如果有关联用户，可以添加
-            // userId: currentUser?.uid
         };
 
         try {
@@ -115,12 +113,48 @@ async function loadCarsList() {
             });
         });
         
-        // 按创建时间倒序排序
+        // 修复排序：处理不同的日期格式
         cars.sort((a, b) => {
-            if (a.createdAt && b.createdAt) {
-                return b.createdAt.localeCompare(a.createdAt);
+            try {
+                // 获取时间戳值
+                let timeA = 0;
+                let timeB = 0;
+                
+                // 处理 a.createdAt
+                if (a.createdAt) {
+                    if (typeof a.createdAt === 'string') {
+                        timeA = new Date(a.createdAt).getTime();
+                    } else if (a.createdAt instanceof Date) {
+                        timeA = a.createdAt.getTime();
+                    } else if (a.createdAt?.toDate) {
+                        // Firebase Timestamp 对象
+                        timeA = a.createdAt.toDate().getTime();
+                    } else if (typeof a.createdAt === 'number') {
+                        timeA = a.createdAt;
+                    }
+                }
+                
+                // 处理 b.createdAt
+                if (b.createdAt) {
+                    if (typeof b.createdAt === 'string') {
+                        timeB = new Date(b.createdAt).getTime();
+                    } else if (b.createdAt instanceof Date) {
+                        timeB = b.createdAt.getTime();
+                    } else if (b.createdAt?.toDate) {
+                        // Firebase Timestamp 对象
+                        timeB = b.createdAt.toDate().getTime();
+                    } else if (typeof b.createdAt === 'number') {
+                        timeB = b.createdAt;
+                    }
+                }
+                
+                // 降序排列（新的在前）
+                return timeB - timeA;
+                
+            } catch (error) {
+                console.warn('排序错误:', error);
+                return 0;
             }
-            return 0;
         });
 
         if (cars.length === 0) {
@@ -131,7 +165,6 @@ async function loadCarsList() {
         tbody.innerHTML = '';
         
         cars.forEach(car => {
-            // 根据数据库实际字段名显示
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${escapeHtml(car.plate || '未知')}</strong></td>
