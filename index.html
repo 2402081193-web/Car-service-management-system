@@ -1,197 +1,211 @@
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/login.css">
-<style>
-    
-/* 输入框图标调整 */
-.input-group {
-position: relative;
-@@ -60,7 +59,6 @@
-margin-right: 5px;
-}
-
-        
-/* 注册链接 */
-.register-link {
-text-align: center;
-@@ -169,7 +167,7 @@ <h2>汽车服务管理系统</h2>
-<div id="loginError" class="alert alert-danger" style="display: none;"></div>
-
-<!-- 密码登录表单 -->
-            <form id="passwordLoginForm" style="display: block;">
-            <form id="passwordLoginForm">
-<div class="form-group">
-<label>账号 <span style="color: #64748b; font-size: 0.85rem;">(邮箱或手机号)</span></label>
-<div class="input-group">
-@@ -199,6 +197,40 @@ <h2>汽车服务管理系统</h2>
-<button type="submit" class="btn btn-primary btn-block" id="passwordLoginBtn">登录</button>
-</form>
-
-            <div class="register-link">
-                <span>还没有账号？</span>
-                <a href="#" onclick="showRegisterOptions()">立即注册</a>
-            </div>
-            
-            <div class="back-home">
-                <a href="index.html"><i class="fas fa-arrow-left"></i> 返回首页</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 注册选项模态框 -->
-    <div class="modal" id="registerModal">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3>选择注册身份</h3>
-                <span class="close" onclick="closeRegisterModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p style="margin-bottom: 20px; color: #64748b;">请选择您要注册的身份：</p>
-                
-                <div style="display: flex; gap: 15px; justify-content: center;">
-                    <div class="role-option" onclick="redirectToRegister('customer')" style="max-width: none; flex: 1; padding: 20px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #667eea;"></i>
-                        <span style="display: block; margin-top: 10px; font-weight: 600;">车主注册</span>
-                    </div>
-                    <div class="role-option" onclick="redirectToRegister('admin')" style="max-width: none; flex: 1; padding: 20px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; cursor: pointer;">
-                        <i class="fas fa-user-tie" style="font-size: 2rem; color: #667eea;"></i>
-                        <span style="display: block; margin-top: 10px; font-weight: 600;">管理员注册</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-<!-- 忘记密码模态框 -->
-<div class="modal" id="forgotModal">
-@@ -245,21 +277,15 @@ <h3>重置密码</h3>
-document.getElementById('loadingOverlay').classList.remove('show');
-}
-
-            
-            // 更新标签样式
-            document.getElementById('tabPassword').classList.toggle('active', method === 'password');
-            
-            // 切换表单显示
-            document.getElementById('passwordLoginForm').style.display = method === 'password' ? 'block' : 'none';
-            
-            // 清空错误信息
-            document.getElementById('loginError').style.display = 'none';
-        };
-
-        // 实时检查账号角色（密码登录）
-        // 实时检查账号角色
-document.getElementById('loginAccount').addEventListener('input', function(e) {
-const account = e.target.value.trim();
-
-            // 清除之前的定时器
-            if (accountCheckTimer) {
-                clearTimeout(accountCheckTimer);
-            }
-            
-if (account.length < 3) {
-document.getElementById('accountRoleHint').innerHTML = '';
-return;
-@@ -304,33 +330,6 @@ <h3>重置密码</h3>
-}
-}
-
-        // 检查手机号角色
-        async function checkPhoneRole(phone) {
-            try {
-                const snapshot = await db.collection('users')
-                    .where('phone', '==', phone)
-                    .limit(1)
-                    .get();
-                
-                const hintDiv = document.getElementById('phoneRoleHint');
-                
-                if (snapshot.empty) {
-                    hintDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.85rem;"><i class="fas fa-exclamation-circle"></i> 手机号未注册</span>';
-                } else {
-                    const userData = snapshot.docs[0].data();
-                    const role = userData.role;
-                    
-                    if (role === 'admin') {
-                        hintDiv.innerHTML = '<span class="role-hint admin"><i class="fas fa-user-tie"></i> 管理员账号</span>';
-                    } else {
-                        hintDiv.innerHTML = '<span class="role-hint customer"><i class="fas fa-user"></i> 车主账号</span>';
-                    }
-                }
-            } catch (error) {
-                console.error('检查手机号失败:', error);
-            }
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车服务管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
+    <style>
+        /* 角色卡片样式 */
+        .role-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
         }
-
-// 密码登录
-document.getElementById('passwordLoginForm').addEventListener('submit', async (e) => {
-e.preventDefault();
-@@ -355,7 +354,7 @@ <h3>重置密码</h3>
-const userCredential = await auth.signInWithEmailAndPassword(account, password);
-user = userCredential.user;
-} else {
-                    // 手机号登录
-                    // 手机号登录 - 通过手机号查找对应的邮箱
-const userSnapshot = await db.collection('users')
-.where('phone', '==', account)
-.limit(1)
-@@ -378,33 +377,6 @@ <h3>重置密码</h3>
-hideLoading();
-}
-});
         
-                // 通过手机号查找用户
-                const userSnapshot = await db.collection('users')
-                    .where('phone', '==', phone)
-                    .limit(1)
-                    .get();
-                
-                if (userSnapshot.empty) {
-                    throw new Error('手机号未注册');
-                }
-                
-                const userData = userSnapshot.docs[0].data();
-                
-                // 这里需要使用 Firebase Phone Auth，但为简化，提示使用密码登录
-                showError('请使用密码登录方式登录');
-                
-                // 自动填充邮箱到密码登录表单
-                document.getElementById('loginAccount').value = userData.email;
-                switchLoginMethod('password');
-                
-            } catch (error) {
-                console.error('Phone login error:', error);
-                showError(error.message);
-            } finally {
-                hideLoading();
+        .role-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 250px;
+            max-width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .role-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+        
+        .role-card i {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .role-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .role-card p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .role-card .btn {
+            width: auto;
+            padding: 10px 30px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .brand-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .brand-section h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        /* 加载动画 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 容器样式 */
+        .login-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="brand-section">
+            <i class="fas fa-car" style="font-size: 5rem; color: #667eea;"></i>
+            <h1>汽车服务管理系统</h1>
+            <p style="color: #666; font-size: 1.1rem;">专业的汽车服务管理平台，为车主和商家提供便捷的服务管理体验。</p>
+        </div>
+        
+        <div class="role-container">
+            <div class="role-card" onclick="location.href='customer/login.html'">
+                <i class="fas fa-user"></i>
+                <h2>车主</h2>
+                <p>管理您的爱车、预约服务、查看记录</p>
+                <button class="btn btn-primary">车主登录</button>
+            </div>
+            
+            <div class="role-card" onclick="location.href='admin/login.html'">
+                <i class="fas fa-user-tie"></i>
+                <h2>管理员</h2>
+                <p>管理车辆、服务、支付、用户</p>
+                <button class="btn btn-primary">管理员登录</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>还没有账号？ 
+                <a href="customer/register.html">车主注册</a> | 
+                <a href="admin/register.html">管理员注册</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKVNXmMefJWmBfqiKKj3fKHBWaSdKw4LA",
+            authDomain: "car-service-managemnt-system.firebaseapp.com",
+            projectId: "car-service-managemnt-system",
+            storageBucket: "car-service-managemnt-system.firebasestorage.app",
+            messagingSenderId: "593184640451",
+            appId: "1:593184640451:web:1bc4a0063eaa8c1b0ec176",
+            measurementId: "G-MF85T06LC1"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 检查登录状态
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('用户已登录:', user.email);
+                // 如果已登录，根据角色跳转到对应页面
+                db.collection('users').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        if (userData.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else {
+                            window.location.href = 'customer-dashboard.html';
+                        }
+                    }
+                }).catch(error => {
+                    console.error('获取用户数据失败:', error);
+                });
             }
         });
 
-// 处理登录成功
-async function handleLoginSuccess(user, remember) {
-@@ -459,6 +431,14 @@ <h3>重置密码</h3>
-showError(errorMessage);
-}
-
-        // 显示注册选项
-        window.showRegisterOptions = function() {
-            document.getElementById('registerModal').classList.add('show');
-        };
-
-        window.closeRegisterModal = function() {
-            document.getElementById('registerModal').classList.remove('show');
-        };
-
-// 跳转到注册页面
-window.redirectToRegister = function(role) {
-@@ -534,11 +514,6 @@ <h3>重置密码</h3>
-}
-});
-
-        // 手机号输入限制
-        document.getElementById('loginPhone').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^\d]/g, '').slice(0, 11);
-        });
-
-// 页面加载时检查URL中是否有hash指示
-window.addEventListener('DOMContentLoaded', () => {
-if (window.location.hash === '#register') {
+        console.log('✅ 首页已加载');
+    </script>
+</body>
+</html>
