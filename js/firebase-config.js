@@ -9,20 +9,15 @@ const firebaseConfig = {
     measurementId: "G-MF85T06LC1"
 };
 
-// 检查是否已经初始化
-if (!firebase.apps.length) {
-    // 初始化 Firebase
-    firebase.initializeApp(firebaseConfig);
-} else {
-    firebase.app(); // 如果已经初始化，使用现有的
-}
+// 初始化 Firebase
+firebase.initializeApp(firebaseConfig);
 
 // 初始化服务
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 管理员注册密码（可以修改）
-const ADMIN_REGISTER_PASSWORD = "Admin123456";
+// 管理员注册密码
+const ADMIN_REGISTER_PASSWORD = "ADMIN2024";
 
 // 导出全局变量
 window.auth = auth;
