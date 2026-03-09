@@ -60,35 +60,48 @@ function loadCarsPage() {
         </div>
     `;
 
-    // 绑定表单提交
-    document.getElementById('carForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // 获取当前登录的管理员（可选）
-        const currentUser = auth.currentUser;
-        
-        const carData = {
-            plate: document.getElementById('plate').value,
-            owner: document.getElementById('owner').value,
-            model: document.getElementById('model').value,
-            brand: document.getElementById('brand').value || '',
-            color: document.getElementById('color').value || '',
-            phone: document.getElementById('phone').value || '',
-            notes: document.getElementById('notes').value || '',
-            createdAt: new Date().toISOString(),  // 使用普通日期字符串
-        };
+   // 绑定表单提交
+document.getElementById('carForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // 获取所有表单字段
+    const plate = document.getElementById('plate').value;
+    const owner = document.getElementById('owner').value;  // 车主姓名
+    const model = document.getElementById('model').value;
+    const brand = document.getElementById('brand').value || '';
+    const color = document.getElementById('color').value || '';
+    const phone = document.getElementById('phone').value || '';  // 联系电话
+    const notes = document.getElementById('notes').value || '';
+    
+    // 验证必填字段
+    if (!plate || !owner || !model) {
+        showError('请填写车牌号、车主姓名和车型');
+        return;
+    }
+    
+    const carData = {
+        plate: plate,
+        owner: owner,  // 确保保存车主姓名
+        model: model,
+        brand: brand,
+        color: color,
+        phone: phone,  // 确保保存联系电话
+        notes: notes,
+        createdAt: new Date().toISOString()
+    };
 
-        try {
-            await db.collection('cars').add(carData);
-            document.getElementById('carForm').reset();
-            loadCarsList();
-            showSuccess('汽车添加成功');
-        } catch (error) {
-            console.error('添加失败:', error);
-            showError('添加失败: ' + error.message);
-        }
-    });
+    console.log('正在添加汽车:', carData);  // 调试用
 
+    try {
+        await db.collection('cars').add(carData);
+        document.getElementById('carForm').reset();
+        loadCarsList();
+        showSuccess('汽车添加成功');
+    } catch (error) {
+        console.error('添加失败:', error);
+        showError('添加失败: ' + error.message);
+    }
+});
     // 加载列表
     loadCarsList();
 }
