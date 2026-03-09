@@ -60,48 +60,67 @@ function loadCarsPage() {
         </div>
     `;
 
-   // 绑定表单提交
-document.getElementById('carForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // 获取所有表单字段
-    const plate = document.getElementById('plate').value;
-    const owner = document.getElementById('owner').value;  // 车主姓名
-    const model = document.getElementById('model').value;
-    const brand = document.getElementById('brand').value || '';
-    const color = document.getElementById('color').value || '';
-    const phone = document.getElementById('phone').value || '';  // 联系电话
-    const notes = document.getElementById('notes').value || '';
-    
-    // 验证必填字段
-    if (!plate || !owner || !model) {
-        showError('请填写车牌号、车主姓名和车型');
-        return;
-    }
-    
-    const carData = {
-        plate: plate,
-        owner: owner,  // 确保保存车主姓名
-        model: model,
-        brand: brand,
-        color: color,
-        phone: phone,  // 确保保存联系电话
-        notes: notes,
-        createdAt: new Date().toISOString()
-    };
+    // 绑定表单提交
+    document.getElementById('carForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // 获取所有表单字段
+        const plate = document.getElementById('plate').value.trim();
+        const owner = document.getElementById('owner').value.trim();
+        const model = document.getElementById('model').value.trim();
+        const brand = document.getElementById('brand').value.trim();
+        const color = document.getElementById('color').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const notes = document.getElementById('notes').value.trim();
+        
+        // 验证必填字段
+        if (!plate) {
+            showError('请输入车牌号');
+            return;
+        }
+        if (!owner) {
+            showError('请输入车主姓名');
+            return;
+        }
+        if (!model) {
+            showError('请输入车型');
+            return;
+        }
+        
+        const carData = {
+            plate: plate.toUpperCase(), // 车牌号转大写
+            owner: owner,
+            model: model,
+            brand: brand || '',
+            color: color || '',
+            phone: phone || '',
+            notes: notes || '',
+            createdAt: new Date().toISOString()
+        };
 
-    console.log('正在添加汽车:', carData);  // 调试用
+        console.log('正在添加汽车:', carData);
 
-    try {
-        await db.collection('cars').add(carData);
-        document.getElementById('carForm').reset();
-        loadCarsList();
-        showSuccess('汽车添加成功');
-    } catch (error) {
-        console.error('添加失败:', error);
-        showError('添加失败: ' + error.message);
-    }
-});
+        try {
+            // 检查车牌号是否已存在
+            const existingCar = await db.collection('cars')
+                .where('plate', '==', carData.plate)
+                .get();
+            
+            if (!existingCar.empty) {
+                showError('该车牌号已存在');
+                return;
+            }
+
+            await db.collection('cars').add(carData);
+            document.getElementById('carForm').reset();
+            loadCarsList();
+            showSuccess('汽车添加成功');
+        } catch (error) {
+            console.error('添加失败:', error);
+            showError('添加失败: ' + error.message);
+        }
+    });
+
     // 加载列表
     loadCarsList();
 }
@@ -126,46 +145,14 @@ async function loadCarsList() {
             });
         });
         
-        // 修复排序：处理不同的日期格式
+        // 按创建时间倒序排序
         cars.sort((a, b) => {
             try {
                 // 获取时间戳值
-                let timeA = 0;
-                let timeB = 0;
-                
-                // 处理 a.createdAt
-                if (a.createdAt) {
-                    if (typeof a.createdAt === 'string') {
-                        timeA = new Date(a.createdAt).getTime();
-                    } else if (a.createdAt instanceof Date) {
-                        timeA = a.createdAt.getTime();
-                    } else if (a.createdAt?.toDate) {
-                        // Firebase Timestamp 对象
-                        timeA = a.createdAt.toDate().getTime();
-                    } else if (typeof a.createdAt === 'number') {
-                        timeA = a.createdAt;
-                    }
-                }
-                
-                // 处理 b.createdAt
-                if (b.createdAt) {
-                    if (typeof b.createdAt === 'string') {
-                        timeB = new Date(b.createdAt).getTime();
-                    } else if (b.createdAt instanceof Date) {
-                        timeB = b.createdAt.getTime();
-                    } else if (b.createdAt?.toDate) {
-                        // Firebase Timestamp 对象
-                        timeB = b.createdAt.toDate().getTime();
-                    } else if (typeof b.createdAt === 'number') {
-                        timeB = b.createdAt;
-                    }
-                }
-                
-                // 降序排列（新的在前）
+                let timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                let timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                 return timeB - timeA;
-                
-            } catch (error) {
-                console.warn('排序错误:', error);
+            } catch {
                 return 0;
             }
         });
@@ -178,14 +165,27 @@ async function loadCarsList() {
         tbody.innerHTML = '';
         
         cars.forEach(car => {
+            // 处理车主姓名 - 如果没有则显示默认值
+            let ownerDisplay = car.owner;
+            if (!ownerDisplay) {
+                // 尝试从其他字段获取车主信息
+                ownerDisplay = car.ownerName || car.customerName || '未知';
+            }
+            
+            // 处理联系电话
+            let phoneDisplay = car.phone;
+            if (!phoneDisplay) {
+                phoneDisplay = car.mobile || car.tel || '-';
+            }
+            
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${escapeHtml(car.plate || '未知')}</strong></td>
-                    <td>${escapeHtml(car.owner || '未知')}</td>
+                    <td>${escapeHtml(ownerDisplay)}</td>
                     <td>${escapeHtml(car.model || '未知')}</td>
                     <td>${escapeHtml(car.brand || '-')}</td>
                     <td>${escapeHtml(car.color || '-')}</td>
-                    <td>${escapeHtml(car.phone || '-')}</td>
+                    <td>${escapeHtml(phoneDisplay)}</td>
                     <td class="action-btns">
                         <button class="action-btn edit" onclick="editCar('${car.id}')">
                             <i class="fas fa-edit"></i>
@@ -230,35 +230,96 @@ window.deleteCar = async (carId) => {
     }
 };
 
-// 编辑汽车（待实现）
-window.editCar = (carId) => {
-    alert('编辑功能开发中...');
+// 编辑汽车
+window.editCar = async (carId) => {
+    // 简单的编辑功能 - 可以后续完善
+    const newOwner = prompt('请输入新的车主姓名:');
+    if (newOwner !== null && newOwner.trim() !== '') {
+        try {
+            await db.collection('cars').doc(carId).update({
+                owner: newOwner.trim()
+            });
+            loadCarsList();
+            showSuccess('车主姓名已更新');
+        } catch (error) {
+            console.error('更新失败:', error);
+            showError('更新失败: ' + error.message);
+        }
+    }
+};
+
+// 辅助函数：修复现有数据
+window.fixCarData = async function() {
+    if (!confirm('确定要修复所有汽车数据吗？这将为缺失的字段添加默认值。')) return;
+    
+    try {
+        const snapshot = await db.collection('cars').get();
+        const batch = db.batch();
+        let count = 0;
+        
+        snapshot.forEach(doc => {
+            const car = doc.data();
+            const updates = {};
+            
+            if (!car.owner) {
+                updates.owner = '未知车主';
+                count++;
+            }
+            if (!car.phone && car.phone !== '') {
+                updates.phone = '';
+                count++;
+            }
+            
+            if (Object.keys(updates).length > 0) {
+                batch.update(doc.ref, updates);
+            }
+        });
+        
+        if (count > 0) {
+            await batch.commit();
+            showSuccess(`已修复 ${count} 条记录`);
+            loadCarsList();
+        } else {
+            showSuccess('没有需要修复的记录');
+        }
+    } catch (error) {
+        console.error('修复失败:', error);
+        showError('修复失败: ' + error.message);
+    }
 };
 
 // 辅助函数：转义HTML
 function escapeHtml(text) {
     if (text === undefined || text === null) return '-';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (typeof text !== 'string') {
+        text = String(text);
+    }
+    return text.replace(/[&<>"]/g, function(match) {
+        if (match === '&') return '&amp;';
+        if (match === '<') return '&lt;';
+        if (match === '>') return '&gt;';
+        if (match === '"') return '&quot;';
+        return match;
+    });
 }
 
 // 辅助函数：显示成功消息
 function showSuccess(message) {
-    // 使用全局的 showSuccess 如果存在
     if (typeof window.showSuccess === 'function') {
         window.showSuccess(message);
     } else {
-        alert(message);
+        alert('✅ ' + message);
     }
 }
 
 // 辅助函数：显示错误消息
 function showError(message) {
-    // 使用全局的 showError 如果存在
     if (typeof window.showError === 'function') {
         window.showError(message);
     } else {
-        alert('错误: ' + message);
+        alert('❌ ' + message);
     }
 }
+
+// 在控制台添加修复按钮（可选）
+console.log('可用修复命令: fixCarData()');
