@@ -6,12 +6,14 @@ function loadCarsPage() {
             <h3 class="form-title">添加新汽车</h3>
             <form id="carForm" class="form-grid">
                 <div class="form-group">
-                    <label>车牌号</label>
-                    <input type="text" id="plate" placeholder="例如: 京A12345" required>
+                    <label>选择车主</label>
+                    <select id="userId" class="form-control" required>
+                        <option value="">请选择车主</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>车主姓名</label>
-                    <input type="text" id="owner" placeholder="车主姓名" required>
+                    <label>车牌号</label>
+                    <input type="text" id="plate" placeholder="例如: 京A12345" required>
                 </div>
                 <div class="form-group">
                     <label>车型</label>
@@ -24,10 +26,6 @@ function loadCarsPage() {
                 <div class="form-group">
                     <label>颜色</label>
                     <input type="text" id="color" placeholder="例如: 白色">
-                </div>
-                <div class="form-group">
-                    <label>联系电话</label>
-                    <input type="tel" id="phone" placeholder="手机号码">
                 </div>
                 <div class="form-group">
                     <label>备注</label>
@@ -46,10 +44,10 @@ function loadCarsPage() {
                     <tr>
                         <th>车牌号</th>
                         <th>车主</th>
+                        <th>联系电话</th>
                         <th>车型</th>
                         <th>品牌</th>
                         <th>颜色</th>
-                        <th>联系电话</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -60,57 +58,56 @@ function loadCarsPage() {
         </div>
     `;
 
+    // 加载车主列表
+    loadUserOptions();
+
     // 绑定表单提交
     document.getElementById('carForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // 获取所有表单字段
-        const plate = document.getElementById('plate').value.trim();
-        const owner = document.getElementById('owner').value.trim();
+        const userId = document.getElementById('userId').value;
+        const plate = document.getElementById('plate').value.trim().toUpperCase();
         const model = document.getElementById('model').value.trim();
         const brand = document.getElementById('brand').value.trim();
         const color = document.getElementById('color').value.trim();
-        const phone = document.getElementById('phone').value.trim();
         const notes = document.getElementById('notes').value.trim();
         
-        // 验证必填字段
+        if (!userId) {
+            showError('请选择车主');
+            return;
+        }
+        
         if (!plate) {
             showError('请输入车牌号');
             return;
         }
-        if (!owner) {
-            showError('请输入车主姓名');
-            return;
-        }
+        
         if (!model) {
             showError('请输入车型');
             return;
         }
         
+        // 检查车牌号是否已存在
+        const existingCar = await db.collection('cars')
+            .where('plate', '==', plate)
+            .get();
+        
+        if (!existingCar.empty) {
+            showError('该车牌号已存在');
+            return;
+        }
+        
         const carData = {
-            plate: plate.toUpperCase(), // 车牌号转大写
-            owner: owner,
+            userId: userId,  // 只保存用户ID，不保存owner和phone
+            plate: plate,
             model: model,
             brand: brand || '',
             color: color || '',
-            phone: phone || '',
             notes: notes || '',
             createdAt: new Date().toISOString()
         };
 
-        console.log('正在添加汽车:', carData);
-
         try {
-            // 检查车牌号是否已存在
-            const existingCar = await db.collection('cars')
-                .where('plate', '==', carData.plate)
-                .get();
-            
-            if (!existingCar.empty) {
-                showError('该车牌号已存在');
-                return;
-            }
-
             await db.collection('cars').add(carData);
             document.getElementById('carForm').reset();
             loadCarsList();
@@ -125,6 +122,38 @@ function loadCarsPage() {
     loadCarsList();
 }
 
+// 加载车主选项
+async function loadUserOptions() {
+    const select = document.getElementById('userId');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">加载中...</option>';
+    
+    try {
+        // 获取所有车主用户
+        const snapshot = await db.collection('users')
+            .where('role', '==', 'customer')
+            .orderBy('name')
+            .get();
+        
+        if (snapshot.empty) {
+            select.innerHTML = '<option value="">暂无车主</option>';
+            return;
+        }
+        
+        select.innerHTML = '<option value="">请选择车主</option>';
+        
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            select.innerHTML += `<option value="${doc.id}">${escapeHtml(user.name || '未知')} (${escapeHtml(user.phone || '无电话')})</option>`;
+        });
+        
+    } catch (error) {
+        console.error('加载车主失败:', error);
+        select.innerHTML = '<option value="">加载失败</option>';
+    }
+}
+
 // 加载汽车列表
 async function loadCarsList() {
     const tbody = document.getElementById('carsTableBody');
@@ -134,11 +163,23 @@ async function loadCarsList() {
 
     try {
         // 获取所有汽车
-        const snapshot = await db.collection('cars').get();
+        const carsSnapshot = await db.collection('cars').get();
         
+        if (carsSnapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无数据</td></tr>';
+            return;
+        }
+
+        // 获取所有用户信息（用于关联）
+        const usersSnapshot = await db.collection('users').get();
+        const usersMap = new Map();
+        usersSnapshot.forEach(doc => {
+            usersMap.set(doc.id, doc.data());
+        });
+
         // 在客户端排序
         const cars = [];
-        snapshot.forEach(doc => {
+        carsSnapshot.forEach(doc => {
             cars.push({
                 id: doc.id,
                 ...doc.data()
@@ -148,7 +189,6 @@ async function loadCarsList() {
         // 按创建时间倒序排序
         cars.sort((a, b) => {
             try {
-                // 获取时间戳值
                 let timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
                 let timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                 return timeB - timeA;
@@ -157,35 +197,22 @@ async function loadCarsList() {
             }
         });
 
-        if (cars.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无数据</td></tr>';
-            return;
-        }
-
         tbody.innerHTML = '';
         
-        cars.forEach(car => {
-            // 处理车主姓名 - 如果没有则显示默认值
-            let ownerDisplay = car.owner;
-            if (!ownerDisplay) {
-                // 尝试从其他字段获取车主信息
-                ownerDisplay = car.ownerName || car.customerName || '未知';
-            }
-            
-            // 处理联系电话
-            let phoneDisplay = car.phone;
-            if (!phoneDisplay) {
-                phoneDisplay = car.mobile || car.tel || '-';
-            }
+        for (const car of cars) {
+            // 从 usersMap 获取车主信息
+            const user = usersMap.get(car.userId) || {};
+            const ownerName = user.name || '未知车主';
+            const ownerPhone = user.phone || '-';
             
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${escapeHtml(car.plate || '未知')}</strong></td>
-                    <td>${escapeHtml(ownerDisplay)}</td>
+                    <td>${escapeHtml(ownerName)}</td>
+                    <td>${escapeHtml(ownerPhone)}</td>
                     <td>${escapeHtml(car.model || '未知')}</td>
                     <td>${escapeHtml(car.brand || '-')}</td>
                     <td>${escapeHtml(car.color || '-')}</td>
-                    <td>${escapeHtml(phoneDisplay)}</td>
                     <td class="action-btns">
                         <button class="action-btn edit" onclick="editCar('${car.id}')">
                             <i class="fas fa-edit"></i>
@@ -196,7 +223,7 @@ async function loadCarsList() {
                     </td>
                 </tr>
             `;
-        });
+        }
 
     } catch (error) {
         console.error('加载失败:', error);
@@ -231,61 +258,8 @@ window.deleteCar = async (carId) => {
 };
 
 // 编辑汽车
-window.editCar = async (carId) => {
-    // 简单的编辑功能 - 可以后续完善
-    const newOwner = prompt('请输入新的车主姓名:');
-    if (newOwner !== null && newOwner.trim() !== '') {
-        try {
-            await db.collection('cars').doc(carId).update({
-                owner: newOwner.trim()
-            });
-            loadCarsList();
-            showSuccess('车主姓名已更新');
-        } catch (error) {
-            console.error('更新失败:', error);
-            showError('更新失败: ' + error.message);
-        }
-    }
-};
-
-// 辅助函数：修复现有数据
-window.fixCarData = async function() {
-    if (!confirm('确定要修复所有汽车数据吗？这将为缺失的字段添加默认值。')) return;
-    
-    try {
-        const snapshot = await db.collection('cars').get();
-        const batch = db.batch();
-        let count = 0;
-        
-        snapshot.forEach(doc => {
-            const car = doc.data();
-            const updates = {};
-            
-            if (!car.owner) {
-                updates.owner = '未知车主';
-                count++;
-            }
-            if (!car.phone && car.phone !== '') {
-                updates.phone = '';
-                count++;
-            }
-            
-            if (Object.keys(updates).length > 0) {
-                batch.update(doc.ref, updates);
-            }
-        });
-        
-        if (count > 0) {
-            await batch.commit();
-            showSuccess(`已修复 ${count} 条记录`);
-            loadCarsList();
-        } else {
-            showSuccess('没有需要修复的记录');
-        }
-    } catch (error) {
-        console.error('修复失败:', error);
-        showError('修复失败: ' + error.message);
-    }
+window.editCar = (carId) => {
+    alert('编辑功能开发中...');
 };
 
 // 辅助函数：转义HTML
@@ -320,6 +294,3 @@ function showError(message) {
         alert('❌ ' + message);
     }
 }
-
-// 在控制台添加修复按钮（可选）
-console.log('可用修复命令: fixCarData()');
